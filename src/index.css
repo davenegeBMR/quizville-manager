@@ -67,3 +67,24 @@
 .exam-flagged {
   @apply bg-amber-100;
 }
+
+/* Quiz navigation button styles */
+.quiz-nav-button {
+  @apply w-full h-full rounded overflow-hidden flex flex-col;
+}
+
+.quiz-nav-button .top-half {
+  @apply bg-gray-600 h-1/2 w-full flex items-center justify-center;
+}
+
+.quiz-nav-button .bottom-half {
+  @apply bg-white h-1/2 w-full flex items-center justify-center;
+}
+
+.quiz-nav-button.flagged .bottom-half {
+  @apply bg-amber-100;
+}
+
+.quiz-nav-button.answered .bottom-half {
+  @apply bg-primary text-white;
+}

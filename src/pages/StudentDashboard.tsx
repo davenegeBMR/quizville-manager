@@ -95,15 +95,19 @@ const StudentDashboard = () => {
     const items = [];
     for (let i = 0; i < totalQuestions; i++) {
       items.push(
-        <PaginationItem key={i}>
-          <PaginationLink
-            isActive={currentIndex === i}
-            className={`w-8 h-8 ${flaggedQuestions[questions[i].id] ? 'bg-amber-100 hover:bg-amber-200' : ''}`}
+        <div key={i} className="w-8 h-8 m-1">
+          <button
             onClick={() => handleJumpToQuestion(i)}
+            className={`w-full h-full rounded-md flex flex-col overflow-hidden ${currentIndex === i ? 'border-2 border-primary' : 'border border-gray-300'} ${flaggedQuestions[questions[i].id] ? 'bg-amber-100' : ''}`}
           >
-            {i + 1}
-          </PaginationLink>
-        </PaginationItem>
+            <div className="bg-gray-600 h-1/2 w-full flex items-center justify-center">
+              <span className="text-white text-xs"></span>
+            </div>
+            <div className="bg-white h-1/2 w-full flex items-center justify-center">
+              <span className="text-xs font-medium">{i + 1}</span>
+            </div>
+          </button>
+        </div>
       );
     }
     return items;
@@ -133,45 +137,49 @@ const StudentDashboard = () => {
             </div>
             
             <div className="bg-blue-50 border rounded-md p-6 mb-4">
-              <div className="flex justify-between mb-6">
-                <div>
-                  <span className="font-medium">Question {questionNumber}</span>
-                  <div className="text-sm text-muted-foreground">
+              <div className="flex flex-col md:flex-row mb-6 gap-4">
+                {/* Question Status Section - Moved to the left */}
+                <div className="md:w-1/4 p-3 bg-white border rounded-md">
+                  <span className="font-medium block mb-2">Question {questionNumber}</span>
+                  <div className="text-sm text-muted-foreground mb-1">
                     Not yet answered
                   </div>
-                  <div className="text-sm text-muted-foreground">
+                  <div className="text-sm text-muted-foreground mb-3">
                     Marked out of 1.00
                   </div>
                   <button 
-                    className="text-sm text-blue-600 flex items-center mt-1"
+                    className={`text-sm flex items-center ${isFlagged ? 'text-amber-600' : 'text-blue-600'}`}
                     onClick={() => toggleFlag(currentQuestion.id)}
                   >
                     <Flag size={16} className="mr-1" />
                     {isFlagged ? 'Unflag question' : 'Flag question'}
                   </button>
                 </div>
-              </div>
-              
-              <div className="font-medium mb-3">{currentQuestion.content}</div>
-              
-              <div className="space-y-3">
-                {['a', 'b', 'c', 'd'].map((option, index) => (
-                  <div key={index} className="flex items-start">
-                    <input 
-                      type="radio" 
-                      id={`option-${option}`} 
-                      name="question-option" 
-                      className="mt-1 mr-2"
-                    />
-                    <label htmlFor={`option-${option}`} className="cursor-pointer">
-                      <span className="mr-2">{option}.</span>
-                      {index === 0 && "They are used for the measurement of force and to control motion"}
-                      {index === 1 && "They are used to store energy"}
-                      {index === 2 && "They are used to absorb shocks and vibrations"}
-                      {index === 3 && currentQuestion.answer}
-                    </label>
+                
+                {/* Question Content - Takes remaining space */}
+                <div className="md:w-3/4">
+                  <div className="font-medium mb-3">{currentQuestion.content}</div>
+                  
+                  <div className="space-y-3">
+                    {['a', 'b', 'c', 'd'].map((option, index) => (
+                      <div key={index} className="flex items-start">
+                        <input 
+                          type="radio" 
+                          id={`option-${option}`} 
+                          name="question-option" 
+                          className="mt-1 mr-2"
+                        />
+                        <label htmlFor={`option-${option}`} className="cursor-pointer">
+                          <span className="mr-2">{option}.</span>
+                          {index === 0 && "They are used for the measurement of force and to control motion"}
+                          {index === 1 && "They are used to store energy"}
+                          {index === 2 && "They are used to absorb shocks and vibrations"}
+                          {index === 3 && currentQuestion.answer}
+                        </label>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                </div>
               </div>
             </div>
             
@@ -199,25 +207,34 @@ const StudentDashboard = () => {
             <h2 className="font-semibold mb-4">Quiz navigation</h2>
             
             <ScrollArea className="h-[400px] rounded-md">
-              <div className="grid grid-cols-7 gap-1">
+              <div className="grid grid-cols-5 gap-1">
                 {generateQuestionGrid()}
               </div>
             </ScrollArea>
             
             <div className="mt-4 border-t pt-4">
               <div className="flex items-center mb-2">
-                <div className="w-6 h-6 rounded border bg-white mr-2"></div>
-                <span className="text-sm">Not yet answered</span>
+                <div className="w-6 h-6 rounded border overflow-hidden">
+                  <div className="bg-gray-600 h-1/2 w-full"></div>
+                  <div className="bg-white h-1/2 w-full"></div>
+                </div>
+                <span className="text-sm ml-2">Not yet answered</span>
               </div>
               <div className="flex items-center mb-2">
-                <div className="w-6 h-6 rounded border bg-primary text-white flex items-center justify-center mr-2">
-                  <Check size={16} />
+                <div className="w-6 h-6 rounded border overflow-hidden">
+                  <div className="bg-gray-600 h-1/2 w-full"></div>
+                  <div className="bg-primary h-1/2 w-full flex items-center justify-center">
+                    <Check size={12} className="text-white" />
+                  </div>
                 </div>
-                <span className="text-sm">Answered</span>
+                <span className="text-sm ml-2">Answered</span>
               </div>
               <div className="flex items-center">
-                <div className="w-6 h-6 rounded border bg-amber-100 mr-2"></div>
-                <span className="text-sm">Flagged</span>
+                <div className="w-6 h-6 rounded border overflow-hidden bg-amber-100">
+                  <div className="bg-gray-600 h-1/2 w-full"></div>
+                  <div className="bg-amber-100 h-1/2 w-full"></div>
+                </div>
+                <span className="text-sm ml-2">Flagged</span>
               </div>
             </div>
           </div>
