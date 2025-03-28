@@ -46,3 +46,24 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Exam page specific styles */
+.exam-option {
+  @apply flex items-start mb-3;
+}
+
+.exam-option input[type="radio"] {
+  @apply mt-1 mr-2;
+}
+
+.exam-navigation .active {
+  @apply bg-primary text-white;
+}
+
+.exam-navigation button {
+  @apply w-8 h-8 text-sm flex items-center justify-center rounded border;
+}
+
+.exam-flagged {
+  @apply bg-amber-100;
+}

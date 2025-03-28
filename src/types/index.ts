@@ -8,9 +8,18 @@ export interface User {
   role: UserRole;
 }
 
+export interface QuestionOption {
+  id: string;
+  text: string;
+  isCorrect: boolean;
+}
+
 export interface Question {
   id: string;
   content: string;
   answer: string;
   createdAt: string;
+  options?: QuestionOption[];
+  points?: number;
+  flagged?: boolean;
 }
