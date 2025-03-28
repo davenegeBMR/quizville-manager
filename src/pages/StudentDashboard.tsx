@@ -98,10 +98,12 @@ const StudentDashboard = () => {
         <div key={i} className="w-8 h-8 m-1">
           <button
             onClick={() => handleJumpToQuestion(i)}
-            className={`quiz-nav-button ${currentIndex === i ? 'border-2 border-primary' : 'border border-gray-300'} ${flaggedQuestions[questions[i].id] ? 'flagged' : ''}`}
+            className={`w-full h-full rounded-md flex flex-col overflow-hidden ${currentIndex === i ? 'border-2 border-primary' : 'border border-gray-300'} ${flaggedQuestions[questions[i].id] ? 'bg-amber-100' : ''}`}
           >
-            <div className="top-half"></div>
-            <div className={`bottom-half ${currentIndex === i ? 'bg-primary text-white' : ''}`}>
+            <div className="bg-gray-600 h-1/2 w-full flex items-center justify-center">
+              <span className="text-white text-xs"></span>
+            </div>
+            <div className="bg-white h-1/2 w-full flex items-center justify-center">
               <span className="text-xs font-medium">{i + 1}</span>
             </div>
           </button>
@@ -122,80 +124,82 @@ const StudentDashboard = () => {
         </div>
         
         <div className="flex flex-col md:flex-row gap-4">
-          {/* Question Status Section - Now outside the blue background */}
-          <div className="w-full md:w-1/4">
-            <div className="p-3 bg-white border rounded-md mb-4">
-              <span className="font-medium block mb-2">Question {questionNumber}</span>
-              <div className="text-sm text-muted-foreground mb-1">
-                Not yet answered
+          <div className="w-full md:w-3/4">
+            <div className="flex justify-between items-center mb-4">
+              <Button variant="outline" onClick={handlePrevious} disabled={currentIndex === 0}>
+                Back
+              </Button>
+              <div className="text-right">
+                <div className="inline-block border rounded px-3 py-1 bg-white">
+                  Time left: {timeLeft}
+                </div>
               </div>
-              <div className="text-sm text-muted-foreground mb-3">
-                Marked out of 1.00
-              </div>
-              <button 
-                className={`text-sm flex items-center ${isFlagged ? 'text-amber-600' : 'text-blue-600'}`}
-                onClick={() => toggleFlag(currentQuestion.id)}
-              >
-                <Flag size={16} className="mr-1" />
-                {isFlagged ? 'Unflag question' : 'Flag question'}
-              </button>
             </div>
             
-            <div className="w-full md:w-3/4">
-              <div className="flex justify-between items-center mb-4">
-                <Button variant="outline" onClick={handlePrevious} disabled={currentIndex === 0}>
-                  Back
-                </Button>
-                <div className="text-right">
-                  <div className="inline-block border rounded px-3 py-1 bg-white">
-                    Time left: {timeLeft}
+            <div className="bg-blue-50 border rounded-md p-6 mb-4">
+              <div className="flex flex-col md:flex-row mb-6 gap-4">
+                {/* Question Status Section - Moved to the left */}
+                <div className="md:w-1/4 p-3 bg-white border rounded-md">
+                  <span className="font-medium block mb-2">Question {questionNumber}</span>
+                  <div className="text-sm text-muted-foreground mb-1">
+                    Not yet answered
+                  </div>
+                  <div className="text-sm text-muted-foreground mb-3">
+                    Marked out of 1.00
+                  </div>
+                  <button 
+                    className={`text-sm flex items-center ${isFlagged ? 'text-amber-600' : 'text-blue-600'}`}
+                    onClick={() => toggleFlag(currentQuestion.id)}
+                  >
+                    <Flag size={16} className="mr-1" />
+                    {isFlagged ? 'Unflag question' : 'Flag question'}
+                  </button>
+                </div>
+                
+                {/* Question Content - Takes remaining space */}
+                <div className="md:w-3/4">
+                  <div className="font-medium mb-3">{currentQuestion.content}</div>
+                  
+                  <div className="space-y-3">
+                    {['a', 'b', 'c', 'd'].map((option, index) => (
+                      <div key={index} className="flex items-start">
+                        <input 
+                          type="radio" 
+                          id={`option-${option}`} 
+                          name="question-option" 
+                          className="mt-1 mr-2"
+                        />
+                        <label htmlFor={`option-${option}`} className="cursor-pointer">
+                          <span className="mr-2">{option}.</span>
+                          {index === 0 && "They are used for the measurement of force and to control motion"}
+                          {index === 1 && "They are used to store energy"}
+                          {index === 2 && "They are used to absorb shocks and vibrations"}
+                          {index === 3 && currentQuestion.answer}
+                        </label>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
+            </div>
+            
+            <div className="flex justify-between">
+              <Button
+                variant="outline"
+                onClick={handlePrevious}
+                disabled={currentIndex === 0}
+                className="bg-gray-200"
+              >
+                Previous page
+              </Button>
               
-              <div className="bg-blue-50 border rounded-md p-6 mb-4">
-                {/* Question Content */}
-                <div className="font-medium mb-3">{currentQuestion.content}</div>
-                
-                <div className="space-y-3">
-                  {['a', 'b', 'c', 'd'].map((option, index) => (
-                    <div key={index} className="flex items-start">
-                      <input 
-                        type="radio" 
-                        id={`option-${option}`} 
-                        name="question-option" 
-                        className="mt-1 mr-2"
-                      />
-                      <label htmlFor={`option-${option}`} className="cursor-pointer">
-                        <span className="mr-2">{option}.</span>
-                        {index === 0 && "They are used for the measurement of force and to control motion"}
-                        {index === 1 && "They are used to store energy"}
-                        {index === 2 && "They are used to absorb shocks and vibrations"}
-                        {index === 3 && currentQuestion.answer}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="flex justify-between">
-                <Button
-                  variant="outline"
-                  onClick={handlePrevious}
-                  disabled={currentIndex === 0}
-                  className="bg-gray-200"
-                >
-                  Previous page
-                </Button>
-                
-                <Button
-                  onClick={handleNext}
-                  disabled={currentIndex === questions.length - 1}
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                  Next page
-                </Button>
-              </div>
+              <Button
+                onClick={handleNext}
+                disabled={currentIndex === questions.length - 1}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                Next page
+              </Button>
             </div>
           </div>
           
@@ -241,4 +245,3 @@ const StudentDashboard = () => {
 };
 
 export default StudentDashboard;
-
