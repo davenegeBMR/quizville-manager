@@ -136,50 +136,46 @@ const StudentDashboard = () => {
               </div>
             </div>
             
+            {/* Question Status Section - Now with white background */}
+            <div className="p-3 bg-white border rounded-md mb-4">
+              <span className="font-medium block mb-2">Question {questionNumber}</span>
+              <div className="text-sm text-muted-foreground mb-1">
+                Not yet answered
+              </div>
+              <div className="text-sm text-muted-foreground mb-3">
+                Marked out of 1.00
+              </div>
+              <button 
+                className={`text-sm flex items-center ${isFlagged ? 'text-amber-600' : 'text-blue-600'}`}
+                onClick={() => toggleFlag(currentQuestion.id)}
+              >
+                <Flag size={16} className="mr-1" />
+                {isFlagged ? 'Unflag question' : 'Flag question'}
+              </button>
+            </div>
+            
+            {/* Question Content */}
             <div className="bg-blue-50 border rounded-md p-6 mb-4">
-              <div className="flex flex-col md:flex-row mb-6 gap-4">
-                {/* Question Status Section - Moved to the left */}
-                <div className="md:w-1/4 p-3 bg-white border rounded-md">
-                  <span className="font-medium block mb-2">Question {questionNumber}</span>
-                  <div className="text-sm text-muted-foreground mb-1">
-                    Not yet answered
+              <div className="font-medium mb-3">{currentQuestion.content}</div>
+              
+              <div className="space-y-3">
+                {['a', 'b', 'c', 'd'].map((option, index) => (
+                  <div key={index} className="flex items-start">
+                    <input 
+                      type="radio" 
+                      id={`option-${option}`} 
+                      name="question-option" 
+                      className="mt-1 mr-2"
+                    />
+                    <label htmlFor={`option-${option}`} className="cursor-pointer">
+                      <span className="mr-2">{option}.</span>
+                      {index === 0 && "They are used for the measurement of force and to control motion"}
+                      {index === 1 && "They are used to store energy"}
+                      {index === 2 && "They are used to absorb shocks and vibrations"}
+                      {index === 3 && currentQuestion.answer}
+                    </label>
                   </div>
-                  <div className="text-sm text-muted-foreground mb-3">
-                    Marked out of 1.00
-                  </div>
-                  <button 
-                    className={`text-sm flex items-center ${isFlagged ? 'text-amber-600' : 'text-blue-600'}`}
-                    onClick={() => toggleFlag(currentQuestion.id)}
-                  >
-                    <Flag size={16} className="mr-1" />
-                    {isFlagged ? 'Unflag question' : 'Flag question'}
-                  </button>
-                </div>
-                
-                {/* Question Content - Takes remaining space */}
-                <div className="md:w-3/4">
-                  <div className="font-medium mb-3">{currentQuestion.content}</div>
-                  
-                  <div className="space-y-3">
-                    {['a', 'b', 'c', 'd'].map((option, index) => (
-                      <div key={index} className="flex items-start">
-                        <input 
-                          type="radio" 
-                          id={`option-${option}`} 
-                          name="question-option" 
-                          className="mt-1 mr-2"
-                        />
-                        <label htmlFor={`option-${option}`} className="cursor-pointer">
-                          <span className="mr-2">{option}.</span>
-                          {index === 0 && "They are used for the measurement of force and to control motion"}
-                          {index === 1 && "They are used to store energy"}
-                          {index === 2 && "They are used to absorb shocks and vibrations"}
-                          {index === 3 && currentQuestion.answer}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
             
