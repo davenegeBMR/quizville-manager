@@ -25,7 +25,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   questionId,
 }) => {
   return (
-    <div className="flex justify-between items-center">
+    <div className="flex justify-end items-center mt-4">
       <div className="flex gap-2">
         <Button
           variant="outline"
