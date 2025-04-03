@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,6 +8,7 @@ import { Question } from '@/types';
 import QuestionContent from '@/components/quiz/QuestionContent';
 import NavigationButtons from '@/components/quiz/NavigationButtons';
 import QuizNavigation from '@/components/quiz/QuizNavigation';
+import { Flag } from 'lucide-react';
 
 const StudentDashboard = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -105,8 +107,29 @@ const StudentDashboard = () => {
               </div>
             </div>
             
-            <div className="mb-4">
-              <QuestionContent question={currentQuestion} />
+            <div className="flex items-start gap-4 mb-4">
+              {/* Question Status Information - now positioned at the top-left */}
+              <div className="p-3 bg-white border rounded-md">
+                <span className="font-medium block mb-2">Question {questionNumber}</span>
+                <div className="text-sm text-muted-foreground mb-1">
+                  Not yet answered
+                </div>
+                <div className="text-sm text-muted-foreground mb-3">
+                  Marked out of 1.00
+                </div>
+                <button 
+                  className={`text-sm flex items-center ${isFlagged ? 'text-amber-600' : 'text-blue-600'}`}
+                  onClick={() => toggleFlag(currentQuestion.id)}
+                >
+                  <Flag size={16} className="mr-1" />
+                  {isFlagged ? 'Unflag question' : 'Flag question'}
+                </button>
+              </div>
+              
+              {/* Question Content */}
+              <div className="flex-1">
+                <QuestionContent question={currentQuestion} />
+              </div>
             </div>
             
             <NavigationButtons 

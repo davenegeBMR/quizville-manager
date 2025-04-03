@@ -26,25 +26,6 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
 }) => {
   return (
     <div className="flex justify-between items-center">
-      <div className="flex items-center gap-4">
-        <div className="p-3 bg-white border rounded-md">
-          <span className="font-medium block mb-2">Question {questionNumber}</span>
-          <div className="text-sm text-muted-foreground mb-1">
-            Not yet answered
-          </div>
-          <div className="text-sm text-muted-foreground mb-3">
-            Marked out of 1.00
-          </div>
-          <button 
-            className={`text-sm flex items-center ${isFlagged ? 'text-amber-600' : 'text-blue-600'}`}
-            onClick={() => toggleFlag(questionId)}
-          >
-            <Flag size={16} className="mr-1" />
-            {isFlagged ? 'Unflag question' : 'Flag question'}
-          </button>
-        </div>
-      </div>
-      
       <div className="flex gap-2">
         <Button
           variant="outline"
