@@ -25,25 +25,23 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   questionId,
 }) => {
   return (
-    <div className="flex justify-end items-center mt-4">
-      <div className="flex gap-2">
-        <Button
-          variant="outline"
-          onClick={onPrevious}
-          disabled={isPreviousDisabled}
-          className="bg-gray-200"
-        >
-          Previous page
-        </Button>
-        
-        <Button
-          onClick={onNext}
-          disabled={isNextDisabled}
-          className="bg-blue-600 hover:bg-blue-700"
-        >
-          Next page
-        </Button>
-      </div>
+    <div className="flex justify-between items-center mt-4 w-full">
+      <Button
+        variant="outline"
+        onClick={onPrevious}
+        disabled={isPreviousDisabled}
+        className="bg-gray-200"
+      >
+        Previous page
+      </Button>
+      
+      <Button
+        onClick={onNext}
+        disabled={isNextDisabled}
+        className="bg-blue-600 hover:bg-blue-700"
+      >
+        Next page
+      </Button>
     </div>
   );
 };
