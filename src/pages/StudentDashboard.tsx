@@ -1,11 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Layout from '@/components/Layout';
 import { getQuestions } from '@/services/mockDatabase';
 import { Question } from '@/types';
-import QuestionStatus from '@/components/quiz/QuestionStatus';
 import QuestionContent from '@/components/quiz/QuestionContent';
 import NavigationButtons from '@/components/quiz/NavigationButtons';
 import QuizNavigation from '@/components/quiz/QuizNavigation';
@@ -107,21 +105,8 @@ const StudentDashboard = () => {
               </div>
             </div>
             
-            <div className="flex flex-col md:flex-row gap-4 mb-4">
-              {/* Question Status Section - Left side */}
-              <div className="w-full md:w-1/4">
-                <QuestionStatus 
-                  questionNumber={questionNumber}
-                  isFlagged={isFlagged}
-                  toggleFlag={toggleFlag}
-                  questionId={currentQuestion.id}
-                />
-              </div>
-              
-              {/* Question Content - Right side */}
-              <div className="w-full md:w-3/4">
-                <QuestionContent question={currentQuestion} />
-              </div>
+            <div className="mb-4">
+              <QuestionContent question={currentQuestion} />
             </div>
             
             <NavigationButtons 
@@ -129,6 +114,10 @@ const StudentDashboard = () => {
               onNext={handleNext}
               isPreviousDisabled={currentIndex === 0}
               isNextDisabled={currentIndex === questions.length - 1}
+              questionNumber={questionNumber}
+              isFlagged={isFlagged}
+              toggleFlag={toggleFlag}
+              questionId={currentQuestion.id}
             />
           </div>
           
