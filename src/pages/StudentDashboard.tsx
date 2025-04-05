@@ -8,7 +8,7 @@ import { Question } from '@/types';
 import QuestionContent from '@/components/quiz/QuestionContent';
 import NavigationButtons from '@/components/quiz/NavigationButtons';
 import QuizNavigation from '@/components/quiz/QuizNavigation';
-import { Flag } from 'lucide-react';
+import QuestionStatus from '@/components/quiz/QuestionStatus';
 
 const StudentDashboard = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -60,10 +60,17 @@ const StudentDashboard = () => {
   };
 
   const toggleFlag = (questionId: string) => {
-    setFlaggedQuestions(prev => ({
-      ...prev,
-      [questionId]: !prev[questionId]
-    }));
+    console.log(`Toggling flag for question ID: ${questionId}`);
+    console.log(`Current flagged status: ${flaggedQuestions[questionId] ? 'Flagged' : 'Not flagged'}`);
+    
+    setFlaggedQuestions(prev => {
+      const newState = {
+        ...prev,
+        [questionId]: !prev[questionId]
+      };
+      console.log('New flagged state:', newState);
+      return newState;
+    });
   };
 
   if (loading) {
@@ -124,23 +131,13 @@ const StudentDashboard = () => {
             </div>
             
             <div className="flex items-start gap-4 mb-4">
-              {/* Question Status Information - now positioned at the top-left */}
-              <div className="p-3 bg-white border rounded-md">
-                <span className="font-medium block mb-2">Question {questionNumber}</span>
-                <div className="text-sm text-muted-foreground mb-1">
-                  Not yet answered
-                </div>
-                <div className="text-sm text-muted-foreground mb-3">
-                  Marked out of 1.00
-                </div>
-                <button 
-                  className={`text-sm flex items-center ${isFlagged ? 'text-amber-600' : 'text-blue-600'}`}
-                  onClick={() => toggleFlag(currentQuestion.id)}
-                >
-                  <Flag size={16} className="mr-1" />
-                  {isFlagged ? 'Unflag question' : 'Flag question'}
-                </button>
-              </div>
+              {/* Question Status Information */}
+              <QuestionStatus 
+                questionNumber={questionNumber} 
+                isFlagged={isFlagged} 
+                toggleFlag={toggleFlag}
+                questionId={currentQuestion.id}
+              />
               
               {/* Question Content */}
               <div className="flex-1">
