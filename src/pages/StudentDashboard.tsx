@@ -9,7 +9,7 @@ import QuestionContent from '@/components/quiz/QuestionContent';
 import NavigationButtons from '@/components/quiz/NavigationButtons';
 import QuizNavigation from '@/components/quiz/QuizNavigation';
 import QuestionStatus from '@/components/quiz/QuestionStatus';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const StudentDashboard = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -17,6 +17,7 @@ const StudentDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [flaggedQuestions, setFlaggedQuestions] = useState<Record<string, boolean>>({});
   const [timeLeft, setTimeLeft] = useState('3:27:00'); // Mock time left
+  const navigate = useNavigate();
 
   useEffect(() => {
     const loadQuestions = async () => {
@@ -74,6 +75,17 @@ const StudentDashboard = () => {
     });
   };
 
+  const navigateToSection = (section: string) => {
+    if (section === 'quiz-review') {
+      navigate('/quiz-review');
+    } else if (section === 'course') {
+      // This would ideally navigate to a courses page, but for now we'll just log
+      console.log('Navigate to courses section - not implemented yet');
+      // When you have a courses page, you can use: navigate('/courses');
+    }
+    // The current page is already the quiz section, so no navigation needed for that
+  };
+
   if (loading) {
     return (
       <Layout>
@@ -111,16 +123,26 @@ const StudentDashboard = () => {
   return (
     <Layout>
       <div className="container mx-auto p-4">
-        <div className="flex justify-between items-center mb-4">
-          <h1 className="text-3xl font-bold">Model Exit Exam for QuizVille 2024</h1>
-          <Link to="/quiz-review">
-            <Button variant="outline">Quiz Review</Button>
-          </Link>
-        </div>
+        <h1 className="text-3xl font-bold mb-4">Model Exit Exam for QuizVille 2024</h1>
         
         <div className="flex mb-2 border-b">
-          <button className="px-4 py-2 text-muted-foreground">Course</button>
-          <button className="px-4 py-2 border-b-2 border-primary font-medium">Quiz</button>
+          <button 
+            className="px-4 py-2 text-muted-foreground hover:text-primary hover:bg-accent/50"
+            onClick={() => navigateToSection('course')}
+          >
+            Course
+          </button>
+          <button 
+            className="px-4 py-2 border-b-2 border-primary font-medium"
+          >
+            Quiz
+          </button>
+          <button 
+            className="px-4 py-2 text-muted-foreground hover:text-primary hover:bg-accent/50"
+            onClick={() => navigateToSection('quiz-review')}
+          >
+            Quiz Review
+          </button>
         </div>
         
         <div className="flex flex-col md:flex-row gap-4">
