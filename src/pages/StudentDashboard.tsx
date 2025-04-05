@@ -9,6 +9,7 @@ import QuestionContent from '@/components/quiz/QuestionContent';
 import NavigationButtons from '@/components/quiz/NavigationButtons';
 import QuizNavigation from '@/components/quiz/QuizNavigation';
 import QuestionStatus from '@/components/quiz/QuestionStatus';
+import { Link } from 'react-router-dom';
 
 const StudentDashboard = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -110,7 +111,12 @@ const StudentDashboard = () => {
   return (
     <Layout>
       <div className="container mx-auto p-4">
-        <h1 className="text-3xl font-bold mb-4">Model Exit Exam for QuizVille 2024</h1>
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-3xl font-bold">Model Exit Exam for QuizVille 2024</h1>
+          <Link to="/quiz-review">
+            <Button variant="outline">Quiz Review</Button>
+          </Link>
+        </div>
         
         <div className="flex mb-2 border-b">
           <button className="px-4 py-2 text-muted-foreground">Course</button>

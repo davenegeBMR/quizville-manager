@@ -13,6 +13,7 @@ import Login from "./pages/Login";
 import AdminDashboard from "./pages/AdminDashboard";
 import StudentDashboard from "./pages/StudentDashboard";
 import NotFound from "./pages/NotFound";
+import QuizReviewPage from "./pages/QuizReviewPage";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +43,15 @@ const App = () => (
               element={
                 <ProtectedRoute requiredRole="student">
                   <StudentDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/quiz-review" 
+              element={
+                <ProtectedRoute requiredRole="student">
+                  <QuizReviewPage />
                 </ProtectedRoute>
               } 
             />
