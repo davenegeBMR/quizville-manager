@@ -36,6 +36,15 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
       </Button>
       
       <Button
+        onClick={() => toggleFlag(questionId)}
+        variant="outline"
+        className={`${isFlagged ? 'text-amber-600' : 'text-blue-600'}`}
+      >
+        <Flag size={16} className="mr-1" />
+        {isFlagged ? 'Unflag question' : 'Flag question'}
+      </Button>
+      
+      <Button
         onClick={onNext}
         disabled={isNextDisabled}
         className="bg-blue-600 hover:bg-blue-700"

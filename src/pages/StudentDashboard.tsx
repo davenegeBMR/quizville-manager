@@ -19,8 +19,24 @@ const StudentDashboard = () => {
 
   useEffect(() => {
     const loadQuestions = async () => {
+      // Get initial questions
       const fetchedQuestions = getQuestions();
-      setQuestions(fetchedQuestions);
+      
+      // Generate additional questions to reach approximately 100
+      const additionalQuestions: Question[] = [];
+      const targetCount = 100;
+      
+      for (let i = fetchedQuestions.length; i < targetCount; i++) {
+        additionalQuestions.push({
+          id: `q${i+1}`,
+          content: `Sample Question ${i+1}: What is the correct answer to this multiple-choice question?`,
+          answer: `This is the answer to question ${i+1}.`,
+          createdAt: new Date().toISOString()
+        });
+      }
+      
+      // Combine original and additional questions
+      setQuestions([...fetchedQuestions, ...additionalQuestions]);
       setLoading(false);
     };
 
