@@ -20,16 +20,21 @@ const QuizNavigation: React.FC<QuizNavigationProps> = ({
   const generateQuestionGrid = () => {
     const items = [];
     for (let i = 0; i < questions.length; i++) {
+      const questionId = questions[i].id;
+      const isFlagged = flaggedQuestions[questionId] || false;
+      
       items.push(
         <div key={i} className="w-8 h-8 m-1">
           <button
             onClick={() => onJumpToQuestion(i)}
-            className={`w-full h-full rounded-md flex flex-col overflow-hidden ${currentIndex === i ? 'border-2 border-primary' : 'border border-gray-300'} ${flaggedQuestions[questions[i].id] ? 'bg-amber-100' : ''}`}
+            className={`w-full h-full rounded-md flex flex-col overflow-hidden ${
+              currentIndex === i ? 'border-2 border-primary' : 'border border-gray-300'
+            }`}
           >
-            <div className="bg-gray-600 h-1/2 w-full flex items-center justify-center">
+            <div className={`${isFlagged ? 'bg-red-500' : 'bg-gray-600'} h-1/2 w-full flex items-center justify-center`}>
               <span className="text-white text-xs"></span>
             </div>
-            <div className="bg-white h-1/2 w-full flex items-center justify-center">
+            <div className={`${isFlagged ? 'bg-red-50' : 'bg-white'} h-1/2 w-full flex items-center justify-center`}>
               <span className="text-xs font-medium">{i + 1}</span>
             </div>
           </button>
@@ -67,9 +72,9 @@ const QuizNavigation: React.FC<QuizNavigationProps> = ({
           <span className="text-sm ml-2">Answered</span>
         </div>
         <div className="flex items-center">
-          <div className="w-6 h-6 rounded border overflow-hidden bg-amber-100">
-            <div className="bg-gray-600 h-1/2 w-full"></div>
-            <div className="bg-amber-100 h-1/2 w-full"></div>
+          <div className="w-6 h-6 rounded border overflow-hidden">
+            <div className="bg-red-500 h-1/2 w-full"></div>
+            <div className="bg-red-50 h-1/2 w-full"></div>
           </div>
           <span className="text-sm ml-2">Flagged</span>
         </div>
