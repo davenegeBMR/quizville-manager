@@ -4,8 +4,9 @@ export type UserRole = 'admin' | 'student';
 export interface User {
   id: string;
   username: string;
-  password: string;
+  email: string;
   role: UserRole;
+  password?: string; // Only used for mock data, not used with Supabase
 }
 
 export interface QuestionOption {
@@ -22,4 +23,19 @@ export interface Question {
   options?: QuestionOption[];
   points?: number;
   flagged?: boolean;
+}
+
+export interface Profile {
+  id: string;
+  username: string;
+  role: UserRole;
+  created_at?: string;
+  email?: string;
+}
+
+export interface CreateUserFormData {
+  email: string;
+  password: string;
+  username: string;
+  role: UserRole;
 }

@@ -1,55 +1,183 @@
 
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { User } from '@/types';
-import { getUserByUsername } from '@/services/mockDatabase';
+import { supabase } from '@/lib/supabase';
+import { Session } from '@supabase/supabase-js';
+import { useToast } from '@/components/ui/use-toast';
 
 interface AuthContextType {
   currentUser: User | null;
-  login: (username: string, password: string) => boolean;
-  logout: () => void;
+  session: Session | null;
+  login: (email: string, password: string) => Promise<boolean>;
+  logout: () => Promise<void>;
   isAuthenticated: boolean;
   isAdmin: boolean;
+  loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
+  const { toast } = useToast();
 
   useEffect(() => {
-    // Check for saved user session in localStorage
-    const savedUser = localStorage.getItem('currentUser');
-    if (savedUser) {
-      const user = JSON.parse(savedUser);
-      setCurrentUser(user);
-      setIsAuthenticated(true);
-    }
+    // Initialize the auth state from Supabase session
+    const initializeAuth = async () => {
+      setLoading(true);
+      
+      // Get current session
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error('Error getting session:', error);
+        setLoading(false);
+        return;
+      }
+      
+      if (session) {
+        setSession(session);
+        
+        // Get user profile data
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+          
+        if (profileError) {
+          console.error('Error getting user profile:', profileError);
+        } else if (profile) {
+          const user: User = {
+            id: profile.id,
+            username: profile.username,
+            role: profile.role,
+            email: session.user.email || ''
+          };
+          setCurrentUser(user);
+          setIsAuthenticated(true);
+        }
+      }
+      
+      setLoading(false);
+    };
+
+    // Set up auth state change listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, newSession) => {
+        setSession(newSession);
+        
+        if (event === 'SIGNED_IN' && newSession) {
+          // Get user profile data
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', newSession.user.id)
+            .single();
+            
+          if (profile) {
+            const user: User = {
+              id: profile.id,
+              username: profile.username,
+              role: profile.role,
+              email: newSession.user.email || ''
+            };
+            setCurrentUser(user);
+            setIsAuthenticated(true);
+          }
+        }
+        
+        if (event === 'SIGNED_OUT') {
+          setCurrentUser(null);
+          setIsAuthenticated(false);
+        }
+      }
+    );
+
+    // Initialize auth state
+    initializeAuth();
+
+    // Clean up subscription when component unmounts
+    return () => {
+      subscription?.unsubscribe();
+    };
   }, []);
 
-  const login = (username: string, password: string): boolean => {
-    const user = getUserByUsername(username);
-    
-    if (user && user.password === password) {
-      setCurrentUser(user);
-      setIsAuthenticated(true);
-      localStorage.setItem('currentUser', JSON.stringify(user));
-      return true;
+  const login = async (email: string, password: string): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        toast({
+          title: "Login Failed",
+          description: error.message,
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      if (data.session) {
+        // Session is handled by the auth state change listener
+        toast({
+          title: "Login Successful",
+          description: "You have been successfully logged in.",
+        });
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error("Login error:", error);
+      toast({
+        title: "Login Error",
+        description: "An unexpected error occurred during login.",
+        variant: "destructive"
+      });
+      return false;
     }
-    
-    return false;
   };
 
-  const logout = () => {
-    setCurrentUser(null);
-    setIsAuthenticated(false);
-    localStorage.removeItem('currentUser');
+  const logout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        toast({
+          title: "Logout Failed",
+          description: error.message,
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      setCurrentUser(null);
+      setIsAuthenticated(false);
+      setSession(null);
+      
+      toast({
+        title: "Logged Out",
+        description: "You have been successfully logged out.",
+      });
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast({
+        title: "Logout Error",
+        description: "An unexpected error occurred during logout.",
+        variant: "destructive"
+      });
+    }
   };
 
   const isAdmin = currentUser?.role === 'admin';
 
   return (
-    <AuthContext.Provider value={{ currentUser, login, logout, isAuthenticated, isAdmin }}>
+    <AuthContext.Provider value={{ currentUser, session, login, logout, isAuthenticated, isAdmin, loading }}>
       {children}
     </AuthContext.Provider>
   );

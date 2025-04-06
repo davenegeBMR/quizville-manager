@@ -8,39 +8,38 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import Layout from '@/components/Layout';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Loader2, LogIn } from 'lucide-react';
 
 const Login = () => {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, isAdmin } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    if (login(username, password)) {
-      // Determine where to redirect based on user role
-      const user = localStorage.getItem('currentUser');
-      if (user) {
-        const parsedUser = JSON.parse(user);
-        if (parsedUser.role === 'admin') {
+    try {
+      const success = await login(email, password);
+      
+      if (success) {
+        // Login successful - the auth context will handle the session
+        // and the protected route will handle the redirection
+        if (isAdmin) {
           navigate('/admin');
         } else {
           navigate('/student');
         }
       }
-    } else {
-      toast({
-        title: "Login Failed",
-        description: "Invalid username or password. Please try again.",
-        variant: "destructive"
-      });
+    } catch (error) {
+      console.error('Login error:', error);
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   };
 
   return (
@@ -56,13 +55,13 @@ const Login = () => {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
-                  id="username"
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Enter your username"
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
                   required
                 />
               </div>
@@ -82,15 +81,23 @@ const Login = () => {
                 className="w-full bg-primary hover:bg-primary/90" 
                 disabled={isLoading}
               >
-                {isLoading ? "Signing in..." : "Sign In"}
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Signing in...
+                  </>
+                ) : (
+                  <>
+                    <LogIn className="mr-2 h-4 w-4" />
+                    Sign In
+                  </>
+                )}
               </Button>
             </form>
           </CardContent>
-          <CardFooter className="flex justify-center text-sm text-muted-foreground">
-            <p>Default Admin: username: admin, password: admin123</p>
-          </CardFooter>
-          <CardFooter className="flex justify-center text-sm text-muted-foreground">
-            <p>Default Student: username: student1, password: student123</p>
+          <CardFooter className="flex flex-col space-y-2 text-sm text-muted-foreground">
+            <p className="text-center">Use your Supabase account credentials to sign in.</p>
+            <p className="text-center text-xs">Please contact an administrator if you need access.</p>
           </CardFooter>
         </Card>
       </div>
