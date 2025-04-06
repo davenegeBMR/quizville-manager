@@ -63,7 +63,40 @@ export const getUsers = (): User[] => {
   return mockUsers;
 };
 
+// Function to add a new user (for mock admin functionality)
+export const addUser = (user: User): User => {
+  mockUsers.push(user);
+  return user;
+};
+
 // Function to get a specific user by ID
 export const getUserById = (id: string): User | undefined => {
   return mockUsers.find(user => user.id === id);
+};
+
+// Function to get a user by email
+export const getUserByEmail = (email: string): User | undefined => {
+  return mockUsers.find(user => user.email === email);
+};
+
+// Function to update a user
+export const updateUser = (id: string, userData: Partial<User>): User | undefined => {
+  const userIndex = mockUsers.findIndex(user => user.id === id);
+  if (userIndex >= 0) {
+    mockUsers[userIndex] = { ...mockUsers[userIndex], ...userData };
+    return mockUsers[userIndex];
+  }
+  return undefined;
+};
+
+// Function to delete a user
+export const deleteUser = (id: string): boolean => {
+  const initialLength = mockUsers.length;
+  const newUsers = mockUsers.filter(user => user.id !== id);
+  if (newUsers.length < initialLength) {
+    mockUsers.length = 0;
+    mockUsers.push(...newUsers);
+    return true;
+  }
+  return false;
 };

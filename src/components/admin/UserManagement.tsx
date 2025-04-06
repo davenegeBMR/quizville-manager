@@ -17,7 +17,7 @@ import {
   TableRow 
 } from '@/components/ui/table';
 import { useToast } from '@/components/ui/use-toast';
-import { supabase } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { User, UserRole, CreateUserFormData } from '@/types';
 import { Input } from '@/components/ui/input';
@@ -30,6 +30,7 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { Loader2, UserPlus, Pencil, Trash2 } from 'lucide-react';
+import { mockUsers } from '@/services/mockDatabase';
 
 const UserManagement: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -56,6 +57,18 @@ const UserManagement: React.FC = () => {
     try {
       setLoading(true);
       
+      if (!isSupabaseConfigured()) {
+        // Use mock users if Supabase is not configured
+        setUsers(mockUsers.map(user => ({
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          role: user.role
+        })));
+        setLoading(false);
+        return;
+      }
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*');
@@ -79,6 +92,38 @@ const UserManagement: React.FC = () => {
     e.preventDefault();
     try {
       setLoading(true);
+      
+      if (!isSupabaseConfigured()) {
+        // Handle mock user creation
+        const newId = `mock-${Date.now()}`;
+        const newUser: User = {
+          id: newId,
+          username: formData.username,
+          email: formData.email,
+          role: formData.role,
+          password: formData.password // Only for mock purposes
+        };
+        
+        mockUsers.push(newUser);
+        
+        // Reset form and close dialog
+        setFormData({
+          email: '',
+          password: '',
+          username: '',
+          role: 'student'
+        });
+        
+        setIsCreateDialogOpen(false);
+        fetchUsers();
+        
+        toast({
+          title: 'Success',
+          description: 'Mock user created successfully.',
+        });
+        
+        return;
+      }
       
       // 1. Create auth user
       const { data: authData, error: authError } = await supabase.auth.admin.createUser({
