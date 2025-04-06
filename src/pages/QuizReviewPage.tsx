@@ -21,26 +21,28 @@ const QuizReviewPage = () => {
   return (
     <Layout>
       <div className="container mx-auto p-4">
-        <h1 className="text-3xl font-bold mb-4">Model Exit Exam for QuizVille 2024</h1>
-        
-        <div className="flex mb-6 border-b">
-          <button 
-            className="px-4 py-2 text-muted-foreground hover:text-primary hover:bg-accent/50"
-            onClick={() => navigateToSection('course')}
-          >
-            Course
-          </button>
-          <button 
-            className="px-4 py-2 text-muted-foreground hover:text-primary hover:bg-accent/50"
-            onClick={() => navigateToSection('quiz')}
-          >
-            Quiz
-          </button>
-          <button 
-            className="px-4 py-2 border-b-2 border-primary font-medium"
-          >
-            Quiz Review
-          </button>
+        <div className="sticky top-0 z-10 bg-background pb-2">
+          <h1 className="text-3xl font-bold mb-4">Model Exit Exam for QuizVille 2024</h1>
+          
+          <div className="flex mb-6 border-b">
+            <button 
+              className="px-4 py-2 text-muted-foreground hover:text-primary hover:bg-accent/50"
+              onClick={() => navigateToSection('course')}
+            >
+              Course
+            </button>
+            <button 
+              className="px-4 py-2 text-muted-foreground hover:text-primary hover:bg-accent/50"
+              onClick={() => navigateToSection('quiz')}
+            >
+              Quiz
+            </button>
+            <button 
+              className="px-4 py-2 border-b-2 border-primary font-medium"
+            >
+              Quiz Review
+            </button>
+          </div>
         </div>
         
         <QuizReview />
