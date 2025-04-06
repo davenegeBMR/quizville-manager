@@ -1,3 +1,4 @@
+
 import { User, Question } from '@/types';
 
 // Example users - Note: Only for development and testing purposes
@@ -6,21 +7,21 @@ export const mockUsers: User[] = [
     id: '1',
     username: 'admin',
     password: 'admin123', // In a real app, passwords should be hashed
-    email: 'admin@example.com', // Added missing email field
+    email: 'admin@example.com',
     role: 'admin'
   },
   {
     id: '2',
     username: 'student1',
     password: 'student1', // In a real app, passwords should be hashed
-    email: 'student1@example.com', // Added missing email field
+    email: 'student1@example.com',
     role: 'student'
   },
   {
     id: '3',
     username: 'student2',
     password: 'student2', // In a real app, passwords should be hashed
-    email: 'student2@example.com', // Added missing email field
+    email: 'student2@example.com',
     role: 'student'
   }
 ];
@@ -46,3 +47,23 @@ export const mockQuestions: Question[] = [
     createdAt: new Date().toISOString(),
   },
 ];
+
+// Function to get all questions
+export const getQuestions = (): Question[] => {
+  return mockQuestions;
+};
+
+// Function to get a specific question by ID
+export const getQuestionById = (id: string): Question | undefined => {
+  return mockQuestions.find(question => question.id === id);
+};
+
+// Function to get all users
+export const getUsers = (): User[] => {
+  return mockUsers;
+};
+
+// Function to get a specific user by ID
+export const getUserById = (id: string): User | undefined => {
+  return mockUsers.find(user => user.id === id);
+};
