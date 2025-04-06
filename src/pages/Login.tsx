@@ -9,7 +9,9 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import Layout from '@/components/Layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, LogIn } from 'lucide-react';
+import { Loader2, LogIn, AlertCircle } from 'lucide-react';
+import { isSupabaseConfigured } from '@/lib/supabase';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -18,6 +20,7 @@ const Login = () => {
   const { login, isAdmin } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const supabaseConfigured = isSupabaseConfigured();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,6 +56,21 @@ const Login = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {!supabaseConfigured && (
+              <Alert variant="warning" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Using Mock Authentication</AlertTitle>
+                <AlertDescription>
+                  <p>Supabase is not configured. Using mock authentication instead.</p>
+                  <p className="font-medium mt-2">Demo credentials:</p>
+                  <ul className="list-disc list-inside mt-1">
+                    <li>Admin: admin@example.com / admin123</li>
+                    <li>Student: student1@example.com / student1</li>
+                  </ul>
+                </AlertDescription>
+              </Alert>
+            )}
+            
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
@@ -96,7 +114,11 @@ const Login = () => {
             </form>
           </CardContent>
           <CardFooter className="flex flex-col space-y-2 text-sm text-muted-foreground">
-            <p className="text-center">Use your Supabase account credentials to sign in.</p>
+            {supabaseConfigured ? (
+              <p className="text-center">Use your Supabase account credentials to sign in.</p>
+            ) : (
+              <p className="text-center">Using mock authentication for demonstration.</p>
+            )}
             <p className="text-center text-xs">Please contact an administrator if you need access.</p>
           </CardFooter>
         </Card>
