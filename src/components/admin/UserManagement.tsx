@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Card, 
@@ -18,7 +17,7 @@ import {
 } from '@/components/ui/table';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { isSupabaseConfigured } from '@/lib/supabase';
+import { isSupabaseConfigured, adminCreateUser } from '@/lib/supabase';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { User, UserRole, CreateUserFormData } from '@/types';
 import { Input } from '@/components/ui/input';
@@ -123,25 +122,16 @@ const UserManagement: React.FC = () => {
         return;
       }
       
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email: formData.email,
-        password: formData.password,
-        email_confirm: true
-      });
+      const { error } = await adminCreateUser(
+        formData.email, 
+        formData.password, 
+        {
+          username: formData.username,
+          role: formData.role
+        }
+      );
       
-      if (authError) throw authError;
-      
-      if (authData.user) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({
-            username: formData.username,
-            role: formData.role
-          } as any)
-          .eq('id', authData.user.id);
-          
-        if (profileError) throw profileError;
-      }
+      if (error) throw error;
       
       setFormData({
         email: '',
