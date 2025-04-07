@@ -71,7 +71,7 @@ const UserManagement: React.FC = () => {
       
       const { data, error } = await supabase
         .from('profiles')
-        .select('*');
+        .select('*') as { data: User[], error: any };
         
       if (error) throw error;
       
@@ -137,7 +137,7 @@ const UserManagement: React.FC = () => {
           .update({
             username: formData.username,
             role: formData.role
-          })
+          } as any)
           .eq('id', authData.user.id);
           
         if (profileError) throw profileError;
@@ -205,7 +205,7 @@ const UserManagement: React.FC = () => {
         .update({
           username: formData.username,
           role: formData.role
-        })
+        } as any)
         .eq('id', selectedUser.id);
         
       if (error) throw error;

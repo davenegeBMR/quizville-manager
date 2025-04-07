@@ -43,7 +43,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                   .from('profiles')
                   .select('*')
                   .eq('id', newSession.user.id)
-                  .single();
+                  .single() as { data: any, error: any };
                   
                 if (profile) {
                   const user: User = {
@@ -105,7 +105,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               .from('profiles')
               .select('*')
               .eq('id', currentSession.user.id)
-              .single();
+              .single() as { data: any, error: any };
               
             if (profile) {
               const user: User = {
