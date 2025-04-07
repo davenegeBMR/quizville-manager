@@ -8,10 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import Layout from '@/components/Layout';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, LogIn, AlertCircle } from 'lucide-react';
-import { isSupabaseConfigured } from '@/lib/supabase';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Loader2, LogIn } from 'lucide-react';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -20,7 +17,6 @@ const Login = () => {
   const { login, isAdmin } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const supabaseConfigured = isSupabaseConfigured();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,6 +36,11 @@ const Login = () => {
       }
     } catch (error) {
       console.error('Login error:', error);
+      toast({
+        title: "Login Failed",
+        description: "An unexpected error occurred during login.",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -56,21 +57,6 @@ const Login = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {!supabaseConfigured && (
-              <Alert variant="warning" className="mb-4">
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Using Mock Authentication</AlertTitle>
-                <AlertDescription>
-                  <p>Supabase is not configured. Using mock authentication instead.</p>
-                  <p className="font-medium mt-2">Demo credentials:</p>
-                  <ul className="list-disc list-inside mt-1">
-                    <li>Admin: admin@example.com / admin123</li>
-                    <li>Student: student1@example.com / student1</li>
-                  </ul>
-                </AlertDescription>
-              </Alert>
-            )}
-            
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
@@ -112,13 +98,19 @@ const Login = () => {
                 )}
               </Button>
             </form>
+
+            <div className="mt-6 text-center">
+              <p className="text-sm text-muted-foreground">
+                Demo credentials:
+              </p>
+              <div className="mt-1 grid gap-1 text-xs">
+                <p><strong>Admin:</strong> admin@example.com / admin123</p>
+                <p><strong>Student:</strong> student1@example.com / student1</p>
+              </div>
+            </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-2 text-sm text-muted-foreground">
-            {supabaseConfigured ? (
-              <p className="text-center">Use your Supabase account credentials to sign in.</p>
-            ) : (
-              <p className="text-center">Using mock authentication for demonstration.</p>
-            )}
+            <p className="text-center">Your Supabase project is now connected!</p>
             <p className="text-center text-xs">Please contact an administrator if you need access.</p>
           </CardFooter>
         </Card>

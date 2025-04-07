@@ -1,7 +1,7 @@
 
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { User } from '@/types';
-import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { Session } from '@supabase/supabase-js';
 import { useToast } from '@/components/ui/use-toast';
 import { mockUsers } from '@/services/mockDatabase';
@@ -24,16 +24,71 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const { toast } = useToast();
-  const supabaseConfigured = isSupabaseConfigured();
-
+  
   useEffect(() => {
     // Initialize the auth state from Supabase session
     const initializeAuth = async () => {
       setLoading(true);
       
-      if (supabaseConfigured) {
+      try {
+        // Set up auth state change listener
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          async (event, newSession) => {
+            setSession(newSession);
+            
+            if (event === 'SIGNED_IN' && newSession) {
+              // Get user profile data or use basic information
+              try {
+                const { data: profile, error: profileError } = await supabase
+                  .from('profiles')
+                  .select('*')
+                  .eq('id', newSession.user.id)
+                  .single();
+                  
+                if (profile) {
+                  const user: User = {
+                    id: profile.id,
+                    username: profile.username,
+                    role: profile.role,
+                    email: newSession.user.email || ''
+                  };
+                  setCurrentUser(user);
+                  setIsAuthenticated(true);
+                } else {
+                  // If no profile exists yet, create a basic user object
+                  const user: User = {
+                    id: newSession.user.id,
+                    username: newSession.user.email?.split('@')[0] || 'user',
+                    role: 'student', // Default role
+                    email: newSession.user.email || ''
+                  };
+                  setCurrentUser(user);
+                  setIsAuthenticated(true);
+                }
+              } catch (error) {
+                console.error('Error getting user profile:', error);
+                // Fallback to basic user info
+                const user: User = {
+                  id: newSession.user.id,
+                  username: newSession.user.email?.split('@')[0] || 'user',
+                  role: 'student', // Default role
+                  email: newSession.user.email || ''
+                };
+                setCurrentUser(user);
+                setIsAuthenticated(true);
+              }
+            }
+            
+            if (event === 'SIGNED_OUT') {
+              setCurrentUser(null);
+              setIsAuthenticated(false);
+              setSession(null);
+            }
+          }
+        );
+
         // Get current session
-        const { data: { session }, error } = await supabase.auth.getSession();
+        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
         
         if (error) {
           console.error('Error getting session:', error);
@@ -41,46 +96,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           return;
         }
         
-        if (session) {
-          setSession(session);
+        if (currentSession) {
+          setSession(currentSession);
           
-          // Get user profile data
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-            
-          if (profileError) {
-            console.error('Error getting user profile:', profileError);
-          } else if (profile) {
-            const user: User = {
-              id: profile.id,
-              username: profile.username,
-              role: profile.role,
-              email: session.user.email || ''
-            };
-            setCurrentUser(user);
-            setIsAuthenticated(true);
-          }
-        }
-      }
-      
-      setLoading(false);
-    };
-
-    if (supabaseConfigured) {
-      // Set up auth state change listener
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        async (event, newSession) => {
-          setSession(newSession);
-          
-          if (event === 'SIGNED_IN' && newSession) {
+          try {
             // Get user profile data
-            const { data: profile } = await supabase
+            const { data: profile, error: profileError } = await supabase
               .from('profiles')
               .select('*')
-              .eq('id', newSession.user.id)
+              .eq('id', currentSession.user.id)
               .single();
               
             if (profile) {
@@ -88,37 +112,60 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 id: profile.id,
                 username: profile.username,
                 role: profile.role,
-                email: newSession.user.email || ''
+                email: currentSession.user.email || ''
+              };
+              setCurrentUser(user);
+              setIsAuthenticated(true);
+            } else {
+              // If no profile exists yet, create a basic user object
+              const user: User = {
+                id: currentSession.user.id,
+                username: currentSession.user.email?.split('@')[0] || 'user',
+                role: 'student', // Default role
+                email: currentSession.user.email || ''
               };
               setCurrentUser(user);
               setIsAuthenticated(true);
             }
-          }
-          
-          if (event === 'SIGNED_OUT') {
-            setCurrentUser(null);
-            setIsAuthenticated(false);
+          } catch (error) {
+            console.error('Error getting user profile:', error);
+            // Fallback to basic user info if profile fetch fails
+            const user: User = {
+              id: currentSession.user.id,
+              username: currentSession.user.email?.split('@')[0] || 'user',
+              role: 'student', // Default role
+              email: currentSession.user.email || ''
+            };
+            setCurrentUser(user);
+            setIsAuthenticated(true);
           }
         }
-      );
 
-      // Initialize auth state
-      initializeAuth();
+        return () => {
+          subscription?.unsubscribe();
+        };
+      } catch (err) {
+        console.error("Error initializing auth:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      // Clean up subscription when component unmounts
-      return () => {
-        subscription?.unsubscribe();
-      };
-    } else {
-      // If Supabase is not configured, initialize with mock data
-      setLoading(false);
-    }
-  }, [supabaseConfigured]);
+    initializeAuth();
+  }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      // If Supabase is not configured, use mock authentication
-      if (!supabaseConfigured) {
+      // Try Supabase authentication first
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        console.log('Supabase auth failed, trying mock authentication:', error);
+        
+        // Fall back to mock authentication if Supabase auth fails
         const mockUser = mockUsers.find(
           (user) => user.email === email && user.password === password
         );
@@ -151,21 +198,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
       }
 
-      // Supabase authentication
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        toast({
-          title: "Login Failed",
-          description: error.message,
-          variant: "destructive"
-        });
-        return false;
-      }
-
       if (data.session) {
         // Session is handled by the auth state change listener
         toast({
@@ -189,18 +221,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const logout = async () => {
     try {
-      if (supabaseConfigured) {
-        const { error } = await supabase.auth.signOut();
-        
-        if (error) {
-          toast({
-            title: "Logout Failed",
-            description: error.message,
-            variant: "destructive"
-          });
-          return;
-        }
-      }
+      await supabase.auth.signOut();
       
       // Clear local state regardless of Supabase configuration
       setCurrentUser(null);
