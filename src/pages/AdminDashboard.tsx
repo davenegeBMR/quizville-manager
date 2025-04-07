@@ -4,7 +4,7 @@ import Layout from '@/components/Layout';
 import UserManagement from '@/components/admin/UserManagement';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { isSupabaseConfigured } from '@/lib/supabase';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Info } from 'lucide-react';
 
 const AdminDashboard = () => {
   const supabaseIsConfigured = isSupabaseConfigured();
@@ -15,11 +15,12 @@ const AdminDashboard = () => {
         <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
         
         {!supabaseIsConfigured && (
-          <Alert variant="destructive" className="mb-6">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Supabase Configuration Error</AlertTitle>
+          <Alert variant="warning" className="mb-6">
+            <Info className="h-4 w-4" />
+            <AlertTitle>Using Mock Database</AlertTitle>
             <AlertDescription>
-              Supabase URL and/or Anon Key are not properly configured. Please check your Supabase connection.
+              <p>Supabase is not configured. Using mock database instead.</p>
+              <p className="text-sm mt-2">All user management operations will be performed on local memory only and will not persist after page refresh.</p>
             </AlertDescription>
           </Alert>
         )}

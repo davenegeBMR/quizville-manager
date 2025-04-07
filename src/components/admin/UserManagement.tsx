@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Card, 
@@ -58,7 +57,6 @@ const UserManagement: React.FC = () => {
       setLoading(true);
       
       if (!isSupabaseConfigured()) {
-        // Use mock users if Supabase is not configured
         setUsers(mockUsers.map(user => ({
           id: user.id,
           username: user.username,
@@ -94,19 +92,17 @@ const UserManagement: React.FC = () => {
       setLoading(true);
       
       if (!isSupabaseConfigured()) {
-        // Handle mock user creation
         const newId = `mock-${Date.now()}`;
         const newUser: User = {
           id: newId,
           username: formData.username,
           email: formData.email,
           role: formData.role,
-          password: formData.password // Only for mock purposes
+          password: formData.password
         };
         
         mockUsers.push(newUser);
         
-        // Reset form and close dialog
         setFormData({
           email: '',
           password: '',
@@ -125,7 +121,6 @@ const UserManagement: React.FC = () => {
         return;
       }
       
-      // 1. Create auth user
       const { data: authData, error: authError } = await supabase.auth.admin.createUser({
         email: formData.email,
         password: formData.password,
@@ -134,7 +129,6 @@ const UserManagement: React.FC = () => {
       
       if (authError) throw authError;
       
-      // 2. Update profile with username and role
       if (authData.user) {
         const { error: profileError } = await supabase
           .from('profiles')
@@ -147,7 +141,6 @@ const UserManagement: React.FC = () => {
         if (profileError) throw profileError;
       }
       
-      // Reset form and close dialog
       setFormData({
         email: '',
         password: '',
@@ -182,7 +175,29 @@ const UserManagement: React.FC = () => {
     try {
       setLoading(true);
       
-      // Update profile
+      if (!isSupabaseConfigured()) {
+        const userIndex = mockUsers.findIndex(user => user.id === selectedUser.id);
+        if (userIndex >= 0) {
+          mockUsers[userIndex] = { 
+            ...mockUsers[userIndex],
+            username: formData.username,
+            role: formData.role 
+          };
+          
+          setSelectedUser(null);
+          setIsEditDialogOpen(false);
+          fetchUsers();
+          
+          toast({
+            title: 'Success',
+            description: 'User updated successfully.',
+          });
+        }
+        
+        setLoading(false);
+        return;
+      }
+      
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -193,7 +208,6 @@ const UserManagement: React.FC = () => {
         
       if (error) throw error;
       
-      // Reset and close dialog
       setSelectedUser(null);
       setIsEditDialogOpen(false);
       fetchUsers();
@@ -220,12 +234,30 @@ const UserManagement: React.FC = () => {
     try {
       setLoading(true);
       
-      // Delete user
+      if (!isSupabaseConfigured()) {
+        const newUsers = mockUsers.filter(user => user.id !== selectedUser.id);
+        if (newUsers.length < mockUsers.length) {
+          mockUsers.length = 0;
+          mockUsers.push(...newUsers);
+          
+          setSelectedUser(null);
+          setIsDeleteDialogOpen(false);
+          fetchUsers();
+          
+          toast({
+            title: 'Success',
+            description: 'User deleted successfully.',
+          });
+        }
+        
+        setLoading(false);
+        return;
+      }
+      
       const { error } = await supabase.auth.admin.deleteUser(selectedUser.id);
       
       if (error) throw error;
       
-      // Reset and close dialog
       setSelectedUser(null);
       setIsDeleteDialogOpen(false);
       fetchUsers();
@@ -391,7 +423,6 @@ const UserManagement: React.FC = () => {
           </Table>
         )}
         
-        {/* Edit User Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent>
             <DialogHeader>
@@ -449,7 +480,6 @@ const UserManagement: React.FC = () => {
           </DialogContent>
         </Dialog>
         
-        {/* Delete User Dialog */}
         <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
           <DialogContent>
             <DialogHeader>
