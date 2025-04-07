@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   Card, 
@@ -16,7 +17,8 @@ import {
   TableRow 
 } from '@/components/ui/table';
 import { useToast } from '@/components/ui/use-toast';
-import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
+import { isSupabaseConfigured } from '@/lib/supabase';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { User, UserRole, CreateUserFormData } from '@/types';
 import { Input } from '@/components/ui/input';
