@@ -1,7 +1,6 @@
-
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-import { User } from '@/types';
-import { supabase, ProfilesRow } from '@/integrations/supabase/client';
+import { User, UserRole } from '@/types';
+import { supabase, ProfilesRow, profilesTable } from '@/integrations/supabase/client';
 import { Session } from '@supabase/supabase-js';
 import { useToast } from '@/components/ui/use-toast';
 import { mockUsers } from '@/services/mockDatabase';
@@ -36,18 +35,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             
             if (event === 'SIGNED_IN' && newSession) {
               try {
-                // Use type assertion to handle the profiles table
-                const { data: profile, error: profileError } = await supabase
-                  .from('profiles')
+                // Use the profilesTable helper to ensure type safety
+                const { data: profile, error: profileError } = await profilesTable()
                   .select('*')
                   .eq('id', newSession.user.id)
-                  .single() as { data: ProfilesRow | null, error: any };
+                  .single();
                   
                 if (profile) {
                   const user: User = {
                     id: profile.id,
                     username: profile.username,
-                    role: profile.role,
+                    role: profile.role as UserRole,
                     email: newSession.user.email || ''
                   };
                   setCurrentUser(user);
@@ -95,18 +93,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           setSession(currentSession);
           
           try {
-            // Use type assertion to handle the profiles table
-            const { data: profile, error: profileError } = await supabase
-              .from('profiles')
+            // Use the profilesTable helper to ensure type safety
+            const { data: profile, error: profileError } = await profilesTable()
               .select('*')
               .eq('id', currentSession.user.id)
-              .single() as { data: ProfilesRow | null, error: any };
+              .single();
               
             if (profile) {
               const user: User = {
                 id: profile.id,
                 username: profile.username,
-                role: profile.role,
+                role: profile.role as UserRole,
                 email: currentSession.user.email || ''
               };
               setCurrentUser(user);
