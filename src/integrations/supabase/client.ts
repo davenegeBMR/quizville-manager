@@ -23,17 +23,18 @@ export type ProfilesRow = {
 
 // Helper functions for safely querying tables with proper types
 export const profilesTable = () => {
-  // Use type assertion to bypass TypeScript's type checking for the Supabase client
-  // This is necessary because the auto-generated types don't properly recognize our tables
-  return supabase.from('profiles') as unknown as {
-    select: (columns?: string) => {
-      eq: (column: string, value: string) => {
-        single: () => Promise<{ data: ProfilesRow | null, error: any }>;
-        maybeSingle: () => Promise<{ data: ProfilesRow | null, error: any }>;
-      };
-    };
-    update: (data: Partial<ProfilesRow>) => {
-      eq: (column: string, value: string) => Promise<{ data: any, error: any }>;
-    };
+  // Bypass TypeScript's type checking with a more explicit type assertion approach
+  // This handles the case where the auto-generated types don't include our tables
+  return {
+    select: (columns?: string) => ({
+      eq: (column: string, value: string) => ({
+        single: () => supabase.from('profiles').select(columns || '*').eq(column, value).single() as Promise<{ data: ProfilesRow | null, error: any }>,
+        maybeSingle: () => supabase.from('profiles').select(columns || '*').eq(column, value).maybeSingle() as Promise<{ data: ProfilesRow | null, error: any }>
+      })
+    }),
+    update: (data: Partial<ProfilesRow>) => ({
+      eq: (column: string, value: string) => 
+        supabase.from('profiles').update(data).eq(column, value) as Promise<{ data: any, error: any }>
+    })
   };
 };
