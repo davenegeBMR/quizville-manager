@@ -1,289 +1,108 @@
+
 import React, { useState, useEffect } from 'react';
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
+import { Loader2, UserPlus } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { isSupabaseConfigured, adminCreateUser } from '@/lib/supabase';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { User, UserRole, CreateUserFormData } from '@/types';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
-import { Loader2, UserPlus, Pencil, Trash2 } from 'lucide-react';
 import { mockUsers } from '@/services/mockDatabase';
+import { User, UserRole, CreateUserFormData } from '@/types';
+import UserTable from './UserTable';
+import UserDialog from './UserDialog';
 
 const UserManagement: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  
+  const [dialogState, setDialogState] = useState<{
+    type: 'create' | 'edit' | 'delete' | null;
+    user: User | null;
+  }>({ type: null, user: null });
+
   const [formData, setFormData] = useState<CreateUserFormData>({
-    email: '',
-    password: '',
-    username: '',
-    role: 'student'
+    email: '', password: '', username: '', role: 'student'
   });
-  
+
   const { toast } = useToast();
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+  useEffect(() => { fetchUsers(); }, []);
 
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      
       if (!isSupabaseConfigured()) {
-        setUsers(mockUsers.map(user => ({
-          id: user.id,
-          username: user.username,
-          email: user.email,
-          role: user.role
-        })));
+        setUsers(mockUsers.map(({ id, username, email, role }) => ({ id, username, email, role })));
         setLoading(false);
         return;
       }
-      
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*') as { data: User[], error: any };
-        
+      const { data, error } = await (supabase as any).from('profiles').select('*');
       if (error) throw error;
-      
       setUsers(data || []);
     } catch (error) {
-      console.error('Error fetching users:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch users.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: 'Failed to fetch users.', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCreateUser = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleUserSubmit = async (type: 'create' | 'edit', data: CreateUserFormData, userId?: string) => {
     try {
       setLoading(true);
-      
       if (!isSupabaseConfigured()) {
-        const newId = `mock-${Date.now()}`;
-        const newUser: User = {
-          id: newId,
-          username: formData.username,
-          email: formData.email,
-          role: formData.role,
-          password: formData.password
-        };
-        
-        mockUsers.push(newUser);
-        
-        setFormData({
-          email: '',
-          password: '',
-          username: '',
-          role: 'student'
-        });
-        
-        setIsCreateDialogOpen(false);
-        fetchUsers();
-        
-        toast({
-          title: 'Success',
-          description: 'Mock user created successfully.',
-        });
-        
-        return;
-      }
-      
-      const { error } = await adminCreateUser(
-        formData.email, 
-        formData.password, 
-        {
-          username: formData.username,
-          role: formData.role
+        if (type === 'create') {
+          const newUser: User = { id: `mock-${Date.now()}`, ...data };
+          mockUsers.push(newUser);
+          setFormData({ email: '', password: '', username: '', role: 'student' });
+        } else if (type === 'edit' && userId) {
+          const idx = mockUsers.findIndex(u => u.id === userId);
+          if (idx >= 0) Object.assign(mockUsers[idx], data);
         }
-      );
-      
-      if (error) throw error;
-      
-      setFormData({
-        email: '',
-        password: '',
-        username: '',
-        role: 'student'
-      });
-      
-      setIsCreateDialogOpen(false);
-      fetchUsers();
-      
-      toast({
-        title: 'Success',
-        description: 'User created successfully.',
-      });
-    } catch (error: any) {
-      console.error('Error creating user:', error);
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to create user.',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleEditUser = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!selectedUser) return;
-    
-    try {
-      setLoading(true);
-      
-      if (!isSupabaseConfigured()) {
-        const userIndex = mockUsers.findIndex(user => user.id === selectedUser.id);
-        if (userIndex >= 0) {
-          mockUsers[userIndex] = { 
-            ...mockUsers[userIndex],
-            username: formData.username,
-            role: formData.role 
-          };
-          
-          setSelectedUser(null);
-          setIsEditDialogOpen(false);
-          fetchUsers();
-          
-          toast({
-            title: 'Success',
-            description: 'User updated successfully.',
-          });
-        }
-        
+        await fetchUsers();
+        toast({ title: 'Success', description: `Mock user ${type === 'create' ? 'created' : 'updated'} successfully.` });
+        setDialogState({ type: null, user: null });
         setLoading(false);
         return;
       }
-      
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          username: formData.username,
-          role: formData.role
-        } as any)
-        .eq('id', selectedUser.id);
-        
-      if (error) throw error;
-      
-      setSelectedUser(null);
-      setIsEditDialogOpen(false);
-      fetchUsers();
-      
-      toast({
-        title: 'Success',
-        description: 'User updated successfully.',
-      });
+      if (type === 'create') {
+        const { error } = await adminCreateUser(data.email, data.password, { username: data.username, role: data.role });
+        if (error) throw error;
+      } else if (type === 'edit' && userId) {
+        const { error } = await (supabase as any).from('profiles').update({ username: data.username, role: data.role }).eq('id', userId);
+        if (error) throw error;
+      }
+      setFormData({ email: '', password: '', username: '', role: 'student' });
+      await fetchUsers();
+      toast({ title: 'Success', description: `User ${type === 'create' ? 'created' : 'updated'} successfully.` });
+      setDialogState({ type: null, user: null });
     } catch (error: any) {
-      console.error('Error updating user:', error);
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to update user.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: error?.message || `Failed to ${type} user.`, variant: 'destructive' });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDeleteUser = async () => {
-    if (!selectedUser) return;
-    
+  const handleDeleteUser = async (userId: string) => {
     try {
       setLoading(true);
-      
       if (!isSupabaseConfigured()) {
-        const newUsers = mockUsers.filter(user => user.id !== selectedUser.id);
-        if (newUsers.length < mockUsers.length) {
-          mockUsers.length = 0;
-          mockUsers.push(...newUsers);
-          
-          setSelectedUser(null);
-          setIsDeleteDialogOpen(false);
-          fetchUsers();
-          
-          toast({
-            title: 'Success',
-            description: 'User deleted successfully.',
-          });
-        }
-        
+        const newUsers = mockUsers.filter(u => u.id !== userId);
+        mockUsers.length = 0; mockUsers.push(...newUsers);
+        await fetchUsers();
+        toast({ title: 'Success', description: 'User deleted successfully.' });
+        setDialogState({ type: null, user: null });
         setLoading(false);
         return;
       }
-      
-      const { error } = await supabase.auth.admin.deleteUser(selectedUser.id);
-      
+      const { error } = await (supabase as any).auth.admin.deleteUser(userId);
       if (error) throw error;
-      
-      setSelectedUser(null);
-      setIsDeleteDialogOpen(false);
-      fetchUsers();
-      
-      toast({
-        title: 'Success',
-        description: 'User deleted successfully.',
-      });
+      await fetchUsers();
+      toast({ title: 'Success', description: 'User deleted successfully.' });
+      setDialogState({ type: null, user: null });
     } catch (error: any) {
-      console.error('Error deleting user:', error);
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to delete user.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: error?.message || 'Failed to delete user.', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
-  };
-
-  const openEditDialog = (user: User) => {
-    setSelectedUser(user);
-    setFormData({
-      email: user.email || '',
-      password: '',
-      username: user.username,
-      role: user.role
-    });
-    setIsEditDialogOpen(true);
-  };
-
-  const openDeleteDialog = (user: User) => {
-    setSelectedUser(user);
-    setIsDeleteDialogOpen(true);
   };
 
   return (
@@ -293,82 +112,9 @@ const UserManagement: React.FC = () => {
           <CardTitle>User Management</CardTitle>
           <CardDescription>Manage system users</CardDescription>
         </div>
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <UserPlus className="mr-2 h-4 w-4" />
-              Add User
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create New User</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleCreateUser} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  placeholder="user@example.com"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  placeholder="********"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
-                <Input
-                  id="username"
-                  type="text"
-                  value={formData.username}
-                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                  placeholder="johndoe"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="role">Role</Label>
-                <Select 
-                  value={formData.role} 
-                  onValueChange={(value: UserRole) => setFormData({ ...formData, role: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="student">Student</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex justify-end gap-2 pt-4">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setIsCreateDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={loading}>
-                  {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                  Create User
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <Button onClick={() => setDialogState({ type: 'create', user: null })}>
+          <UserPlus className="mr-2 h-4 w-4" /> Add User
+        </Button>
       </CardHeader>
       <CardContent>
         {loading && users.length === 0 ? (
@@ -376,127 +122,21 @@ const UserManagement: React.FC = () => {
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Username</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center">
-                    No users found
-                  </TableCell>
-                </TableRow>
-              ) : (
-                users.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell>{user.username}</TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell>{user.role}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => openEditDialog(user)}>
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={() => openDeleteDialog(user)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+          <UserTable 
+            users={users}
+            onEdit={user => setDialogState({ type: 'edit', user })}
+            onDelete={user => setDialogState({ type: 'delete', user })}
+          />
         )}
-        
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Edit User</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleEditUser} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-email">Email</Label>
-                <Input
-                  id="edit-email"
-                  type="email"
-                  value={formData.email}
-                  disabled
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-username">Username</Label>
-                <Input
-                  id="edit-username"
-                  type="text"
-                  value={formData.username}
-                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-role">Role</Label>
-                <Select 
-                  value={formData.role} 
-                  onValueChange={(value: UserRole) => setFormData({ ...formData, role: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="student">Student</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex justify-end gap-2 pt-4">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setIsEditDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={loading}>
-                  {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                  Update User
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-        
-        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Delete User</DialogTitle>
-            </DialogHeader>
-            <p>Are you sure you want to delete this user? This action cannot be undone.</p>
-            <div className="flex justify-end gap-2 pt-4">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => setIsDeleteDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button 
-                variant="destructive"
-                onClick={handleDeleteUser} 
-                disabled={loading}
-              >
-                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                Delete
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <UserDialog
+          state={dialogState}
+          setState={setDialogState}
+          loading={loading}
+          formData={formData}
+          setFormData={setFormData}
+          onSubmit={handleUserSubmit}
+          onDelete={handleDeleteUser}
+        />
       </CardContent>
     </Card>
   );
