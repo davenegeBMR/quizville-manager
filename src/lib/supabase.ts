@@ -26,9 +26,9 @@ export const adminCreateUser = async (email: string, password: string, userData:
     }
 
     if (authData?.user) {
-      // Use the profilesTable helper to ensure type safety
+      // Use a type assertion to bypass TypeScript's type checking
       const { error: profileError } = await profilesTable()
-        .update(userData as any)
+        .update(userData as Partial<ProfilesRow>)
         .eq('id', authData.user.id);
 
       if (profileError) {

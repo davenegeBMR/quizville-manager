@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { User, UserRole } from "@/types";
 import { supabase, ProfilesRow, profilesTable } from "@/integrations/supabase/client";
@@ -44,7 +43,7 @@ export function useAuthState() {
               setTimeout(async () => {
                 try {
                   const { data: profile } = await profilesTable()
-                    .select("*")
+                    .select()
                     .eq("id", newSession.user.id)
                     .maybeSingle();
 
@@ -73,7 +72,7 @@ export function useAuthState() {
           setSession(currentSession);
           try {
             const { data: profile } = await profilesTable()
-              .select("*")
+              .select()
               .eq("id", currentSession.user.id)
               .maybeSingle();
 
