@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 // Helper function to check if Supabase is properly configured
 export const isSupabaseConfigured = (): boolean => {
   try {
-    // Simple check to see if we can connect to Supabase
     return !!supabase;
   } catch (error) {
     console.error("Supabase configuration error:", error);
@@ -13,9 +12,8 @@ export const isSupabaseConfigured = (): boolean => {
 };
 
 // Helper function for admin operations
-export const adminCreateUser = async (email: string, password: string, userData: any) => {
+export const adminCreateUser = async (email: string, password: string, userData: { username: string; role: string }) => {
   try {
-    // First create the user in auth
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email,
       password,
@@ -27,7 +25,6 @@ export const adminCreateUser = async (email: string, password: string, userData:
     }
 
     if (authData?.user) {
-      // Then update their profile
       const { error: profileError } = await supabase
         .from('profiles')
         .update(userData)
