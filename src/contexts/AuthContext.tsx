@@ -1,6 +1,7 @@
+
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { User } from '@/types';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, ProfilesRow } from '@/integrations/supabase/client';
 import { Session } from '@supabase/supabase-js';
 import { useToast } from '@/components/ui/use-toast';
 import { mockUsers } from '@/services/mockDatabase';
@@ -35,11 +36,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             
             if (event === 'SIGNED_IN' && newSession) {
               try {
+                // Use type assertion to handle the profiles table
                 const { data: profile, error: profileError } = await supabase
                   .from('profiles')
                   .select('*')
                   .eq('id', newSession.user.id)
-                  .single();
+                  .single() as { data: ProfilesRow | null, error: any };
                   
                 if (profile) {
                   const user: User = {
@@ -93,11 +95,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           setSession(currentSession);
           
           try {
+            // Use type assertion to handle the profiles table
             const { data: profile, error: profileError } = await supabase
               .from('profiles')
               .select('*')
               .eq('id', currentSession.user.id)
-              .single();
+              .single() as { data: ProfilesRow | null, error: any };
               
             if (profile) {
               const user: User = {

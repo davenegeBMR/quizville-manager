@@ -1,5 +1,5 @@
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, ProfilesRow } from "@/integrations/supabase/client";
 
 // Helper function to check if Supabase is properly configured
 export const isSupabaseConfigured = (): boolean => {
@@ -25,9 +25,10 @@ export const adminCreateUser = async (email: string, password: string, userData:
     }
 
     if (authData?.user) {
+      // Use a type assertion to handle the type issue
       const { error: profileError } = await supabase
         .from('profiles')
-        .update(userData)
+        .update(userData as any)
         .eq('id', authData.user.id);
 
       if (profileError) {
