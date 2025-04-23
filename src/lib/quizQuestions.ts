@@ -25,17 +25,31 @@ export async function fetchSupabaseQuestions(): Promise<Question[]> {
 
 // Insert or overwrite all questions (admin function)
 export async function importQuestionsToSupabase(questions: { question_number: number; content: string; answer: string }[]) {
-  // Remove all existing questions first (admins only)
-  const { error: delError } = await supabase.from("quiz_questions").delete().neq("id", "");
-  if (delError) {
-    console.error("Failed to delete old questions:", delError);
-    return { error: delError };
+  try {
+    // Remove all existing questions first (admins only)
+    const { error: delError } = await supabase
+      .from("quiz_questions")
+      .delete()
+      .gt("question_number", 0); // Changed from .neq("id", "") to fix the error
+    
+    if (delError) {
+      console.error("Failed to delete old questions:", delError);
+      return { error: delError };
+    }
+    
+    // Insert new questions
+    const { error: insError } = await supabase
+      .from("quiz_questions")
+      .insert(questions);
+    
+    if (insError) {
+      console.error("Error inserting questions:", insError);
+      return { error: insError };
+    }
+    
+    return { error: null };
+  } catch (e) {
+    console.error("Exception in importQuestionsToSupabase:", e);
+    return { error: e };
   }
-  // Insert new questions
-  const { error: insError } = await supabase.from("quiz_questions").insert(questions);
-  if (insError) {
-    console.error("Error inserting questions:", insError);
-    return { error: insError };
-  }
-  return { error: null };
 }

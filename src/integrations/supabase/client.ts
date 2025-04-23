@@ -30,7 +30,7 @@ export const profilesTable = () => {
         single: () => {
           // Use correct generics for the table reference
           const query = supabase
-            .from<Database['public']['Tables']['profiles']['Row']>("profiles")
+            .from('profiles')
             .select(columns || "*")
             .eq(column as string, value)
             .single();
@@ -38,7 +38,7 @@ export const profilesTable = () => {
         },
         maybeSingle: () => {
           const query = supabase
-            .from<Database['public']['Tables']['profiles']['Row']>("profiles")
+            .from('profiles')
             .select(columns || "*")
             .eq(column as string, value)
             .maybeSingle();
@@ -49,7 +49,7 @@ export const profilesTable = () => {
     update: (data: Partial<ProfilesRow>) => ({
       eq: (column: keyof Database['public']['Tables']['profiles']['Row'], value: string) => {
         const query = supabase
-          .from<Database['public']['Tables']['profiles']['Row']>("profiles")
+          .from('profiles')
           .update(data as any)
           .eq(column as string, value);
         return query as unknown as Promise<{ data: any, error: any }>;
