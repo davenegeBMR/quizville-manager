@@ -14,6 +14,10 @@ export async function fetchSupabaseQuestions(): Promise<Question[]> {
     return [];
   }
   if (!data) return [];
+  
+  // Add console log to help with debugging
+  console.log("Fetched questions from Supabase:", data);
+  
   return data.map((row) => ({
     id: row.id,
     content: row.content,

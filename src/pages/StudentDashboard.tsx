@@ -10,6 +10,7 @@ import QuizNavigation from '@/components/quiz/QuizNavigation';
 import QuestionStatus from '@/components/quiz/QuestionStatus';
 import { Link, useNavigate } from 'react-router-dom';
 import { fetchSupabaseQuestions } from "@/lib/quizQuestions";
+import { useToast } from '@/components/ui/use-toast';
 
 const StudentDashboard = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -17,37 +18,63 @@ const StudentDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [flaggedQuestions, setFlaggedQuestions] = useState<Record<string, boolean>>({});
   const [timeLeft, setTimeLeft] = useState('3:27:00'); // Mock time left
-  const [supabaseLoaded, setSupabaseLoaded] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
     const loadQuestions = async () => {
-      // Try Supabase first
-      const fetchedSupabase = await fetchSupabaseQuestions();
-      let allQuestions: Question[];
-      if (fetchedSupabase && fetchedSupabase.length > 0) {
-        allQuestions = fetchedSupabase;
-      } else {
-        // fallback to mock + generated
-        const fetchedQuestions = getQuestions();
-        const additionalQuestions: Question[] = [];
-        const targetCount = 100;
-        for (let i = fetchedQuestions.length; i < targetCount; i++) {
-          additionalQuestions.push({
-            id: `q${i+1}`,
-            content: `Sample Question ${i+1}: What is the correct answer to this multiple-choice question?`,
-            answer: `This is the answer to question ${i+1}.`,
-            createdAt: new Date().toISOString()
+      try {
+        // Try Supabase first
+        const fetchedSupabase = await fetchSupabaseQuestions();
+        console.log("Supabase questions load attempt:", fetchedSupabase?.length || 0, "questions found");
+        
+        let allQuestions: Question[];
+        if (fetchedSupabase && fetchedSupabase.length > 0) {
+          allQuestions = fetchedSupabase;
+          toast({
+            title: "Questions Loaded",
+            description: `Loaded ${fetchedSupabase.length} questions from Supabase`,
+          });
+        } else {
+          // fallback to mock + generated
+          console.log("No Supabase questions found, falling back to mock data");
+          const fetchedQuestions = getQuestions();
+          const additionalQuestions: Question[] = [];
+          const targetCount = 100;
+          for (let i = fetchedQuestions.length; i < targetCount; i++) {
+            additionalQuestions.push({
+              id: `q${i+1}`,
+              content: `Sample Question ${i+1}: What is the correct answer to this multiple-choice question?`,
+              answer: `This is the answer to question ${i+1}.`,
+              createdAt: new Date().toISOString()
+            });
+          }
+          allQuestions = [...fetchedQuestions, ...additionalQuestions];
+          toast({
+            title: "Using Mock Questions",
+            description: `Loaded ${allQuestions.length} mock questions`,
+            variant: "destructive"
           });
         }
-        allQuestions = [...fetchedQuestions, ...additionalQuestions];
+        setQuestions(allQuestions);
+      } catch (error) {
+        console.error("Error loading questions:", error);
+        toast({
+          title: "Error Loading Questions",
+          description: "There was an error loading questions. Using mock data instead.",
+          variant: "destructive"
+        });
+        
+        // Use mock data as final fallback
+        const mockQuestions = getQuestions();
+        setQuestions(mockQuestions);
+      } finally {
+        setLoading(false);
       }
-      setQuestions(allQuestions);
-      setLoading(false);
-      setSupabaseLoaded(true);
     };
+    
     loadQuestions();
-  }, []);
+  }, [toast]);
 
   const handleNext = () => {
     if (currentIndex < questions.length - 1) {
