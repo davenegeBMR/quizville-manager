@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,6 +9,7 @@ import NavigationButtons from '@/components/quiz/NavigationButtons';
 import QuizNavigation from '@/components/quiz/QuizNavigation';
 import QuestionStatus from '@/components/quiz/QuestionStatus';
 import { Link, useNavigate } from 'react-router-dom';
+import { fetchSupabaseQuestions } from "@/lib/quizQuestions";
 
 const StudentDashboard = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -17,31 +17,35 @@ const StudentDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [flaggedQuestions, setFlaggedQuestions] = useState<Record<string, boolean>>({});
   const [timeLeft, setTimeLeft] = useState('3:27:00'); // Mock time left
+  const [supabaseLoaded, setSupabaseLoaded] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     const loadQuestions = async () => {
-      // Get initial questions
-      const fetchedQuestions = getQuestions();
-      
-      // Generate additional questions to reach approximately 100
-      const additionalQuestions: Question[] = [];
-      const targetCount = 100;
-      
-      for (let i = fetchedQuestions.length; i < targetCount; i++) {
-        additionalQuestions.push({
-          id: `q${i+1}`,
-          content: `Sample Question ${i+1}: What is the correct answer to this multiple-choice question?`,
-          answer: `This is the answer to question ${i+1}.`,
-          createdAt: new Date().toISOString()
-        });
+      // Try Supabase first
+      const fetchedSupabase = await fetchSupabaseQuestions();
+      let allQuestions: Question[];
+      if (fetchedSupabase && fetchedSupabase.length > 0) {
+        allQuestions = fetchedSupabase;
+      } else {
+        // fallback to mock + generated
+        const fetchedQuestions = getQuestions();
+        const additionalQuestions: Question[] = [];
+        const targetCount = 100;
+        for (let i = fetchedQuestions.length; i < targetCount; i++) {
+          additionalQuestions.push({
+            id: `q${i+1}`,
+            content: `Sample Question ${i+1}: What is the correct answer to this multiple-choice question?`,
+            answer: `This is the answer to question ${i+1}.`,
+            createdAt: new Date().toISOString()
+          });
+        }
+        allQuestions = [...fetchedQuestions, ...additionalQuestions];
       }
-      
-      // Combine original and additional questions
-      setQuestions([...fetchedQuestions, ...additionalQuestions]);
+      setQuestions(allQuestions);
       setLoading(false);
+      setSupabaseLoaded(true);
     };
-
     loadQuestions();
   }, []);
 

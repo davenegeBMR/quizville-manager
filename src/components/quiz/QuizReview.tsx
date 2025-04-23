@@ -1,20 +1,16 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Question } from '@/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { fetchSupabaseQuestions } from '@/lib/quizQuestions';
 import { getQuestions } from '@/services/mockDatabase';
 import { useIsMobile } from '@/hooks/use-mobile';
 
-// Key must match AdminDashboard
 const LOCAL_STORAGE_KEY = 'importedQuizQuestions';
 
-// Parse imported text into question objects
-function parseImportedQuestions(importText: string): Question[] {
-  // Simple parser expecting format:
-  // 1. Question text
-  // Answer: answer text
-  // Empty line between questions
+const parseImportedQuestions = (importText: string): Question[] => {
+  // Same block splitting as before
   const blocks = importText.split(/\n\s*\n/);
   let questions: Question[] = [];
   let idSeed = 0;
@@ -38,26 +34,39 @@ function parseImportedQuestions(importText: string): Question[] {
   });
 
   return questions;
-}
+};
 
 const QuizReview = () => {
-  // Try to load imported questions from localStorage
-  let importedQuestions: Question[] | null = null;
-  let hasImported = false;
-  if (typeof window !== 'undefined') {
-    const importText = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (importText && importText.trim()) {
-      importedQuestions = parseImportedQuestions(importText);
-      hasImported = importedQuestions.length > 0;
-    }
-  }
-
-  // Use imported OR mock
-  const questions: Question[] = hasImported
-    ? importedQuestions!
-    : getQuestions();
-
+  const [questions, setQuestions] = useState<Question[]>([]);
   const isMobile = useIsMobile();
+
+  useEffect(() => {
+    // Try to load questions from Supabase first
+    let unmounted = false;
+    fetchSupabaseQuestions().then((fetched) => {
+      if (!unmounted && fetched && fetched.length > 0) {
+        setQuestions(fetched);
+      } else {
+        // fallback: try to load from localStorage (imported text), otherwise use mock
+        if (typeof window !== 'undefined') {
+          const importText = localStorage.getItem(LOCAL_STORAGE_KEY);
+          if (importText && importText.trim()) {
+            const imported = parseImportedQuestions(importText);
+            if (imported.length > 0) {
+              setQuestions(imported);
+              return;
+            }
+          }
+        }
+        // fallback to mock data
+        setQuestions(getQuestions());
+      }
+    });
+
+    return () => {
+      unmounted = true;
+    };
+  }, []);
 
   // Generate the formatted quiz text
   const generateQuizText = () => {

@@ -33,6 +33,41 @@ export type Database = {
         }
         Relationships: []
       }
+      quiz_questions: {
+        Row: {
+          answer: string
+          content: string
+          created_at: string
+          created_by: string | null
+          id: string
+          question_number: number
+        }
+        Insert: {
+          answer: string
+          content: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          question_number: number
+        }
+        Update: {
+          answer?: string
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          question_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_questions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import UserManagement from '@/components/admin/UserManagement';
@@ -7,6 +6,7 @@ import { Info } from 'lucide-react';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { importQuestionsToSupabase } from "@/lib/quizQuestions";
 
 const LOCAL_STORAGE_KEY = 'importedQuizQuestions';
 
@@ -15,6 +15,7 @@ const AdminDashboard = () => {
   const [importText, setImportText] = useState('');
   const [importError, setImportError] = useState('');
   const [importSuccess, setImportSuccess] = useState('');
+  const [isImporting, setIsImporting] = useState(false);
 
   useEffect(() => {
     const checkSupabase = async () => {
@@ -30,22 +31,58 @@ const AdminDashboard = () => {
     }
   }, []);
 
+  // Parse text into question objects (move logic here for reuse)
+  function parseImportedQuestionsForDB(importText: string): { question_number: number; content: string; answer: string }[] {
+    // 1. Question text
+    // Answer: answer text
+    // Empty line between questions
+    const blocks = importText.split(/\n\s*\n/);
+    let questions: { question_number: number; content: string; answer: string }[] = [];
+    blocks.forEach((block, idx) => {
+      const lines = block.split('\n');
+      const contentLine = lines.find(l => l.match(/^\d+\.\s+/));
+      const answerLine = lines.find(l => l.toLowerCase().startsWith('answer:'));
+      if (contentLine && answerLine) {
+        questions.push({
+          question_number: idx + 1,
+          content: contentLine.replace(/^\d+\.\s*/, '').trim(),
+          answer: answerLine.replace(/^Answer:\s*/i, '').trim(),
+        });
+      }
+    });
+    return questions;
+  }
+
   // Function to handle import
-  const handleImport = (e: React.FormEvent) => {
+  const handleImport = async (e: React.FormEvent) => {
     e.preventDefault();
     setImportError('');
     setImportSuccess('');
-    // Very simple validation: Must contain at least one question + answer
+    setIsImporting(true);
+
     if (!importText.trim()) {
       setImportError('Please enter some questions and answers.');
+      setIsImporting(false);
       return;
     }
+
     try {
-      // Let's save as plain text (could be JSON, but plain text is fine for now)
+      // Save to localStorage as a backup
       localStorage.setItem(LOCAL_STORAGE_KEY, importText.trim());
-      setImportSuccess('Questions imported successfully!');
-    } catch (err) {
-      setImportError('Failed to save questions.');
+
+      // Send to Supabase (overwrites all)
+      const questions = parseImportedQuestionsForDB(importText);
+      const { error } = await importQuestionsToSupabase(questions);
+
+      if (error) {
+        setImportError("Failed to import to Supabase. " + (error.message || error.toString()));
+      } else {
+        setImportSuccess('Questions imported to Supabase successfully!');
+      }
+    } catch (err: any) {
+      setImportError('Failed to save questions. ' + (err.message || err.toString()));
+    } finally {
+      setIsImporting(false);
     }
   };
 
@@ -73,7 +110,7 @@ const AdminDashboard = () => {
               rows={8}
             />
             <div className="flex gap-2 mt-2">
-              <Button type="submit">Import</Button>
+              <Button type="submit" disabled={isImporting}>{isImporting ? "Importing..." : "Import"}</Button>
               <Button type="button" variant="outline" onClick={handleClear}>Clear Imported</Button>
             </div>
             {importError && (
@@ -84,7 +121,7 @@ const AdminDashboard = () => {
             )}
           </form>
           <div className="text-muted-foreground text-xs mt-3">
-            <strong>Note:</strong> Imported questions are stored only in your browser (localStorage). They will override the mock questions in the Quiz Review section.
+            <strong>Note:</strong> Imported questions are now stored in Supabase (and also in your browser as a backup). They will override the mock questions in all quiz sections.
           </div>
         </div>
 
