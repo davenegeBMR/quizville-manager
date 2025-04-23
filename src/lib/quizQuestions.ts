@@ -1,30 +1,42 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Question } from "@/types";
 
 // Fetch all quiz questions from Supabase, ordered by question_number
 export async function fetchSupabaseQuestions(): Promise<Question[]> {
-  const { data, error } = await supabase
-    .from("quiz_questions")
-    .select("*")
-    .order("question_number", { ascending: true });
+  try {
+    const { data, error } = await supabase
+      .from("quiz_questions")
+      .select("*")
+      .order("question_number", { ascending: true });
 
-  if (error) {
-    console.error("Error fetching quiz questions:", error);
+    console.log("Supabase Query Details:");
+    console.log("Raw Data Received:", data);
+    console.log("Query Error:", error);
+
+    if (error) {
+      console.error("Detailed Error Fetching Quiz Questions:", error);
+      return [];
+    }
+    if (!data) {
+      console.warn("No questions data returned from Supabase");
+      return [];
+    }
+    
+    const processedQuestions = data.map((row) => ({
+      id: row.id,
+      content: row.content,
+      answer: row.answer,
+      createdAt: row.created_at,
+    }));
+
+    console.log("Processed Questions:", processedQuestions);
+    console.log("Total Questions Count:", processedQuestions.length);
+
+    return processedQuestions;
+  } catch (catchError) {
+    console.error("Unexpected Error in fetchSupabaseQuestions:", catchError);
     return [];
   }
-  if (!data) return [];
-  
-  // Add console log to help with debugging
-  console.log("Fetched questions from Supabase:", data);
-  
-  return data.map((row) => ({
-    id: row.id,
-    content: row.content,
-    answer: row.answer,
-    createdAt: row.created_at,
-    // No options, points, flagged in db schema
-  }));
 }
 
 // Insert or overwrite all questions (admin function)
