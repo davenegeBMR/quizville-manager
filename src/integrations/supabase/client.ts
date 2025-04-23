@@ -23,23 +23,35 @@ export type ProfilesRow = {
 
 // Helper functions for safely querying tables with proper types
 export const profilesTable = () => {
-  // Use a more explicit approach that properly handles the type assertions
+  // Correctly type all references to the profiles table
   return {
     select: (columns?: string) => ({
-      eq: (column: string, value: string) => ({
+      eq: (column: keyof Database['public']['Tables']['profiles']['Row'], value: string) => ({
         single: () => {
-          const query = supabase.from('profiles').select(columns || '*').eq(column, value).single();
+          // Use correct generics for the table reference
+          const query = supabase
+            .from<Database['public']['Tables']['profiles']['Row']>("profiles")
+            .select(columns || "*")
+            .eq(column as string, value)
+            .single();
           return query as unknown as Promise<{ data: ProfilesRow | null, error: any }>;
         },
         maybeSingle: () => {
-          const query = supabase.from('profiles').select(columns || '*').eq(column, value).maybeSingle();
+          const query = supabase
+            .from<Database['public']['Tables']['profiles']['Row']>("profiles")
+            .select(columns || "*")
+            .eq(column as string, value)
+            .maybeSingle();
           return query as unknown as Promise<{ data: ProfilesRow | null, error: any }>;
         }
       })
     }),
     update: (data: Partial<ProfilesRow>) => ({
-      eq: (column: string, value: string) => {
-        const query = supabase.from('profiles').update(data as any).eq(column, value);
+      eq: (column: keyof Database['public']['Tables']['profiles']['Row'], value: string) => {
+        const query = supabase
+          .from<Database['public']['Tables']['profiles']['Row']>("profiles")
+          .update(data as any)
+          .eq(column as string, value);
         return query as unknown as Promise<{ data: any, error: any }>;
       }
     })
