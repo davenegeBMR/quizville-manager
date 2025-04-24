@@ -9,7 +9,6 @@ import NavigationButtons from '@/components/quiz/NavigationButtons';
 import QuizNavigation from '@/components/quiz/QuizNavigation';
 import QuestionStatus from '@/components/quiz/QuestionStatus';
 import { Link, useNavigate } from 'react-router-dom';
-import { fetchSupabaseQuestions } from "@/lib/quizQuestions";
 import { useToast } from '@/components/ui/use-toast';
 
 const StudentDashboard = () => {
@@ -24,39 +23,25 @@ const StudentDashboard = () => {
   useEffect(() => {
     const loadQuestions = async () => {
       try {
-        // Try Supabase first
-        const fetchedSupabase = await fetchSupabaseQuestions();
-        console.log("Supabase questions load attempt:", fetchedSupabase?.length || 0, "questions found");
+        const mockQuestions = getQuestions();
+        const additionalQuestions: Question[] = [];
+        const targetCount = 100;
         
-        let allQuestions: Question[];
-        if (fetchedSupabase && fetchedSupabase.length > 0) {
-          allQuestions = fetchedSupabase;
-          toast({
-            title: "Questions Loaded",
-            description: `Loaded ${fetchedSupabase.length} questions from Supabase`,
-          });
-        } else {
-          // fallback to mock + generated
-          console.log("No Supabase questions found, falling back to mock data");
-          const fetchedQuestions = getQuestions();
-          const additionalQuestions: Question[] = [];
-          const targetCount = 100;
-          for (let i = fetchedQuestions.length; i < targetCount; i++) {
-            additionalQuestions.push({
-              id: `q${i+1}`,
-              content: `Sample Question ${i+1}: What is the correct answer to this multiple-choice question?`,
-              answer: `This is the answer to question ${i+1}.`,
-              createdAt: new Date().toISOString()
-            });
-          }
-          allQuestions = [...fetchedQuestions, ...additionalQuestions];
-          toast({
-            title: "Using Mock Questions",
-            description: `Loaded ${allQuestions.length} mock questions`,
-            variant: "destructive"
+        for (let i = mockQuestions.length; i < targetCount; i++) {
+          additionalQuestions.push({
+            id: `q${i+1}`,
+            content: `Sample Question ${i+1}: What is the correct answer to this multiple-choice question?`,
+            answer: `This is the answer to question ${i+1}.`,
+            createdAt: new Date().toISOString()
           });
         }
+        
+        const allQuestions = [...mockQuestions, ...additionalQuestions];
         setQuestions(allQuestions);
+        toast({
+          title: "Questions Loaded",
+          description: `Loaded ${allQuestions.length} questions`,
+        });
       } catch (error) {
         console.error("Error loading questions:", error);
         toast({
@@ -64,10 +49,6 @@ const StudentDashboard = () => {
           description: "There was an error loading questions. Using mock data instead.",
           variant: "destructive"
         });
-        
-        // Use mock data as final fallback
-        const mockQuestions = getQuestions();
-        setQuestions(mockQuestions);
       } finally {
         setLoading(false);
       }
@@ -110,11 +91,8 @@ const StudentDashboard = () => {
     if (section === 'quiz-review') {
       navigate('/quiz-review');
     } else if (section === 'course') {
-      // This would ideally navigate to a courses page, but for now we'll just log
       console.log('Navigate to courses section - not implemented yet');
-      // When you have a courses page, you can use: navigate('/courses');
     }
-    // The current page is already the quiz section, so no navigation needed for that
   };
 
   if (loading) {
@@ -190,7 +168,6 @@ const StudentDashboard = () => {
             </div>
             
             <div className="flex items-start gap-4 mb-4">
-              {/* Question Status Information */}
               <QuestionStatus 
                 questionNumber={questionNumber} 
                 isFlagged={isFlagged} 
@@ -198,7 +175,6 @@ const StudentDashboard = () => {
                 questionId={currentQuestion.id}
               />
               
-              {/* Question Content */}
               <div className="flex-1">
                 <QuestionContent question={currentQuestion} />
               </div>

@@ -1,71 +1,35 @@
-import { supabase } from "@/integrations/supabase/client";
+
 import { Question } from "@/types";
 
-// Fetch all quiz questions from Supabase, ordered by question_number
-export async function fetchSupabaseQuestions(): Promise<Question[]> {
-  try {
-    const { data, error } = await supabase
-      .from("quiz_questions")
-      .select("*")
-      .order("question_number", { ascending: true });
-
-    console.log("Supabase Query Details:");
-    console.log("Raw Data Received:", data);
-    console.log("Query Error:", error);
-
-    if (error) {
-      console.error("Detailed Error Fetching Quiz Questions:", error);
-      return [];
-    }
-    if (!data) {
-      console.warn("No questions data returned from Supabase");
-      return [];
-    }
-    
-    const processedQuestions = data.map((row) => ({
-      id: row.id,
-      content: row.content,
-      answer: row.answer,
-      createdAt: row.created_at,
-    }));
-
-    console.log("Processed Questions:", processedQuestions);
-    console.log("Total Questions Count:", processedQuestions.length);
-
-    return processedQuestions;
-  } catch (catchError) {
-    console.error("Unexpected Error in fetchSupabaseQuestions:", catchError);
-    return [];
+// Mock quiz questions data
+const mockQuestions: Question[] = [
+  {
+    id: "q1",
+    content: "What is the purpose of springs in mechanical engineering?",
+    answer: "Springs are used to store energy and provide force in mechanical systems",
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: "q2",
+    content: "Which principle explains why airplanes can fly?",
+    answer: "Bernoulli's principle - the relationship between fluid pressure and velocity",
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: "q3",
+    content: "What is the main function of a capacitor in an electronic circuit?",
+    answer: "To store and release electrical charge",
+    createdAt: new Date().toISOString()
   }
+];
+
+// Return mock questions instead of fetching from Supabase
+export async function fetchSupabaseQuestions(): Promise<Question[]> {
+  return mockQuestions;
 }
 
-// Insert or overwrite all questions (admin function)
+// Mock function for importing questions (admin function)
 export async function importQuestionsToSupabase(questions: { question_number: number; content: string; answer: string }[]) {
-  try {
-    // Remove all existing questions first (admins only)
-    const { error: delError } = await supabase
-      .from("quiz_questions")
-      .delete()
-      .gt("question_number", 0); // Changed from .neq("id", "") to fix the error
-    
-    if (delError) {
-      console.error("Failed to delete old questions:", delError);
-      return { error: delError };
-    }
-    
-    // Insert new questions
-    const { error: insError } = await supabase
-      .from("quiz_questions")
-      .insert(questions);
-    
-    if (insError) {
-      console.error("Error inserting questions:", insError);
-      return { error: insError };
-    }
-    
-    return { error: null };
-  } catch (e) {
-    console.error("Exception in importQuestionsToSupabase:", e);
-    return { error: e };
-  }
+  console.log("Mock import function called with:", questions);
+  return { error: null };
 }
